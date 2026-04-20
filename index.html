@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Fila Ambulatorial – Emerald Night</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-page:       #050816;
+      --bg-card:       #0B1120;
+      --bg-card-alt:   #0d1526;
+      --emerald:       #10B981;
+      --emerald-dark:  #059669;
+      --emerald-glow:  rgba(16,185,129,.15);
+      --text-primary:  #F9FAFB;
+      --text-secondary:#9CA3AF;
+      --border:        rgba(16,185,129,.25);
+      --radius:        12px;
+      --shadow:        0 4px 24px rgba(0,0,0,.5);
+    }
+
+    body {
+      background: var(--bg-page);
+      color: var(--text-primary);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #071a2e 0%, #0a2040 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--emerald);
+    }
+    header p {
+      font-size: .85rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px 24px 48px;
+    }
+
+    /* ── Controles ── */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .btn-refresh {
+      background: var(--emerald);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+    }
+    .btn-refresh:hover   { background: var(--emerald-dark); }
+    .btn-refresh:active  { transform: scale(.97); }
+    .btn-refresh:disabled{ opacity: .5; cursor: not-allowed; }
+    #status { font-size: .82rem; color: var(--text-secondary); }
+    #status.error { color: #F87171; }
+
+    /* ── KPIs ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--emerald-glow);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .kpi-card:hover::before { opacity: 1; }
+    .kpi-label {
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: var(--emerald);
+      line-height: 1;
+    }
+    .kpi-unit { font-size: .8rem; color: var(--text-secondary); margin-top: 4px; }
+
+    /* ── Gráficos ── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .chart-title {
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .chart-wrap { position: relative; height: 260px; }
+
+    /* ── Tabela ── */
+    .table-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+    }
+    .table-card h2 {
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    thead th {
+      background: var(--bg-card-alt);
+      color: var(--emerald);
+      text-align: left;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      transition: background .15s;
+    }
+    tbody tr:hover { background: rgba(16,185,129,.06); }
+    tbody td { padding: 10px 14px; color: var(--text-primary); }
+    tbody td:nth-child(2),
+    tbody td:nth-child(3) { text-align: right; font-variant-numeric: tabular-nums; }
+    .badge-high   { color: var(--emerald); font-weight: 600; }
+    .badge-medium { color: #FBBF24; }
+    .badge-low    { color: var(--text-secondary); }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Painel de Fila Ambulatorial – Emerald Night</h1>
+    <p>Análise de Espera e Procedimentos</p>
+  </header>
+
+  <main>
+
+    <div class="controls">
+      <button class="btn-refresh" id="btnRefresh" onclick="carregarDados()">
+        ⟳ Atualizar dados do Google Sheets
+      </button>
+      <span id="status">Aguardando dados…</span>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Tempo Médio de Espera</div>
+        <div class="kpi-value" id="kpiMedia">—</div>
+        <div class="kpi-unit">dias</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Mediana de Dias em Espera</div>
+        <div class="kpi-value" id="kpiMediana">—</div>
+        <div class="kpi-unit">dias</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Tempo Máximo de Espera</div>
+        <div class="kpi-value" id="kpiMaximo">—</div>
+        <div class="kpi-unit">dias</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total de Solicitações</div>
+        <div class="kpi-value" id="kpiTotal">—</div>
+        <div class="kpi-unit">registros</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Distribuição por Faixa de Dias em Espera</div>
+        <div class="chart-wrap"><canvas id="chartFaixas"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Top 5 Procedimentos por Tempo Médio de Espera</div>
+        <div class="chart-wrap"><canvas id="chartTopProc"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Quantidade de Pacientes por Procedimento</div>
+        <div class="chart-wrap"><canvas id="chartQtdProc"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Tempo Médio de Espera por Grupo Etário</div>
+        <div class="chart-wrap"><canvas id="chartEtario"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h2>Resumo por Procedimento</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Procedimento</th>
+            <th>Qtde em Fila</th>
+            <th>Tempo Médio de Espera (dias)</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaBody">
+          <tr><td colspan="3" style="color:var(--text-secondary);text-align:center;padding:24px">
+            Carregando…
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <script>
+    // =============================================
+    // ⚙️ CONFIGURAÇÃO – cole aqui a URL do seu
+    // Web App gerada pelo Google Apps Script
+    // Implantar → Gerenciar implantações → copiar URL
+    // =============================================
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdPueLojUJrUVamHFbd2Zi_qdfhPLhCRYVR4oSkk-fXW09U6m9qASsrfAMeVl9y_-K5Q/exec';
+
+    // ── Instâncias dos gráficos ──
+    let chartFaixasInst  = null;
+    let chartTopProcInst = null;
+    let chartQtdProcInst = null;
+    let chartEtarioInst  = null;
+
+    const CORES_SERIE = [
+      '#10B981','#059669','#3B82F6','#6366F1','#F59E0B',
+      '#EC4899','#14B8A6','#8B5CF6','#F97316','#22D3EE'
+    ];
+
+    // =============================================
+    // BUSCA DADOS VIA FETCH → Apps Script Web App
+    // =============================================
+    async function carregarDados() {
+      const btn = document.getElementById('btnRefresh');
+      btn.disabled = true;
+      setStatus('Carregando dados…', false);
+
+      try {
+        const response = await fetch(APPS_SCRIPT_URL);
+
+        if (!response.ok) {
+          throw new Error(`Erro HTTP ${response.status}`);
+        }
+
+        const json = await response.json();
+
+        if (json.status === 'error') {
+          throw new Error(json.message);
+        }
+
+        onDataLoaded(json.data);
+
+      } catch (err) {
+        onError(err);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // =============================================
+    // CALLBACK – dados recebidos com sucesso
+    // =============================================
+    function onDataLoaded(dados) {
+      if (!dados || dados.length === 0) {
+        setStatus('Nenhum dado encontrado na planilha.', true);
+        return;
+      }
+
+      const agora = new Date().toLocaleString('pt-BR');
+      setStatus('Dados atualizados em: ' + agora, false);
+
+      const registros = dados
+        .map(d => ({ ...d, diasEspera: Number(d.diasEspera) }))
+        .filter(d => !isNaN(d.diasEspera));
+
+      renderizarKPIs(registros);
+      renderizarGraficos(registros);
+      renderizarTabela(registros);
+    }
+
+    function onError(err) {
+      setStatus('Erro ao carregar dados: ' + (err.message || err), true);
+    }
+
+    function setStatus(msg, isError) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = isError ? 'error' : '';
+    }
+
+    // =============================================
+    // UTILITÁRIOS
+    // =============================================
+    function idadeParaAnos(str) {
+      if (!str) return null;
+      const s = str.toLowerCase();
+      const num = parseFloat(s);
+      if (isNaN(num)) return null;
+      if (s.includes('mes') || s.includes('mês')) return num / 12;
+      return num;
+    }
+
+    function grupoEtario(anos) {
+      if (anos === null) return 'Desconhecido';
+      if (anos < 18) return 'Pediátrico (<18)';
+      if (anos < 60) return 'Adulto (18–59)';
+      return 'Idoso (60+)';
+    }
+
+    function faixaDias(dias) {
+      if (dias <= 30) return '0–30';
+      if (dias <= 60) return '31–60';
+      if (dias <= 90) return '61–90';
+      return '>90';
+    }
+
+    function media(arr) {
+      if (!arr.length) return 0;
+      return arr.reduce((a, b) => a + b, 0) / arr.length;
+    }
+
+    function mediana(arr) {
+      if (!arr.length) return 0;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
+    function agruparPor(registros, fn) {
+      const map = new Map();
+      registros.forEach(r => {
+        const k = fn(r);
+        if (!map.has(k)) map.set(k, []);
+        map.get(k).push(r);
+      });
+      return map;
+    }
+
+    function truncar(str, n) {
+      return str.length > n ? str.slice(0, n) + '…' : str;
+    }
+
+    // =============================================
+    // KPIs
+    // =============================================
+    function renderizarKPIs(registros) {
+      const dias = registros.map(r => r.diasEspera);
+      document.getElementById('kpiMedia').textContent   = media(dias).toFixed(1);
+      document.getElementById('kpiMediana').textContent = mediana(dias).toFixed(1);
+      document.getElementById('kpiMaximo').textContent  = Math.max(...dias);
+      document.getElementById('kpiTotal').textContent   = registros.length;
+    }
+
+    // =============================================
+    // GRÁFICOS
+    // =============================================
+    function renderizarGraficos(registros) {
+      Chart.defaults.color       = '#9CA3AF';
+      Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+      Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+      Chart.defaults.font.size   = 12;
+
+      if (chartFaixasInst)  { chartFaixasInst.destroy();  chartFaixasInst  = null; }
+      if (chartTopProcInst) { chartTopProcInst.destroy(); chartTopProcInst = null; }
+      if (chartQtdProcInst) { chartQtdProcInst.destroy(); chartQtdProcInst = null; }
+      if (chartEtarioInst)  { chartEtarioInst.destroy();  chartEtarioInst  = null; }
+
+      // Gráfico 1: Faixas de dias
+      const faixasOrdem = ['0–30', '31–60', '61–90', '>90'];
+      const contFaixas  = Object.fromEntries(faixasOrdem.map(f => [f, 0]));
+      registros.forEach(r => { contFaixas[faixaDias(r.diasEspera)]++; });
+
+      chartFaixasInst = new Chart(
+        document.getElementById('chartFaixas').getContext('2d'),
+        {
+          type: 'bar',
+          data: {
+            labels: faixasOrdem,
+            datasets: [{
+              label: 'Pacientes',
+              data: faixasOrdem.map(f => contFaixas[f]),
+              backgroundColor: ['#10B981','#059669','#047857','#065F46'],
+              borderRadius: 6,
+              borderSkipped: false,
+            }]
+          },
+          options: barOptions()
+        }
+      );
+
+      // Gráfico 2: Top 5 por tempo médio
+      const mapProc   = agruparPor(registros, r => r.procedimento);
+      const statsProc = [...mapProc.entries()].map(([proc, rows]) => ({
+        proc,
+        procLabel: truncar(proc, 40),
+        mediaEspera: media(rows.map(r => r.diasEspera))
+      })).sort((a, b) => b.mediaEspera - a.mediaEspera);
+
+      const top5 = statsProc.slice(0, 5);
+
+      chartTopProcInst = new Chart(
+        document.getElementById('chartTopProc').getContext('2d'),
+        {
+          type: 'bar',
+          data: {
+            labels: top5.map(d => d.procLabel),
+            datasets: [{
+              label: 'Dias médios',
+              data: top5.map(d => parseFloat(d.mediaEspera.toFixed(1))),
+              backgroundColor: CORES_SERIE.slice(0, 5),
+              borderRadius: 6,
+              borderSkipped: false,
+            }]
+          },
+          options: { ...barOptions(), indexAxis: 'y' }
+        }
+      );
+
+      // Gráfico 3: Quantidade por procedimento
+      chartQtdProcInst = new Chart(
+        document.getElementById('chartQtdProc').getContext('2d'),
+        {
+          type: 'bar',
+          data: {
+            labels: statsProc.map(d => d.procLabel),
+            datasets: [{
+              label: 'Qtde de pacientes',
+              data: statsProc.map(d => mapProc.get(d.proc).length),
+              backgroundColor: CORES_SERIE.slice(0, statsProc.length).map(c => c + 'CC'),
+              borderColor:     CORES_SERIE.slice(0, statsProc.length),
+              borderWidth: 1,
+              borderRadius: 4,
+              borderSkipped: false,
+            }]
+          },
+          options: { ...barOptions(), indexAxis: 'y' }
+        }
+      );
+
+      // Gráfico 4: Grupo etário
+      const ordemEtaria = ['Pediátrico (<18)', 'Adulto (18–59)', 'Idoso (60+)', 'Desconhecido'];
+      const mapEtario   = new Map();
+      registros.forEach(r => {
+        const grupo = grupoEtario(idadeParaAnos(r.idadePaciente));
+        if (!mapEtario.has(grupo)) mapEtario.set(grupo, []);
+        mapEtario.get(grupo).push(r.diasEspera);
+      });
+
+      const labelsEtario = ordemEtaria.filter(g => mapEtario.has(g));
+
+      chartEtarioInst = new Chart(
+        document.getElementById('chartEtario').getContext('2d'),
+        {
+          type: 'bar',
+          data: {
+            labels: labelsEtario,
+            datasets: [{
+              label: 'Dias médios',
+              data: labelsEtario.map(g => parseFloat(media(mapEtario.get(g)).toFixed(1))),
+              backgroundColor: ['#3B82F6','#10B981','#F59E0B','#6B7280'],
+              borderRadius: 6,
+              borderSkipped: false,
+            }]
+          },
+          options: barOptions()
+        }
+      );
+    }
+
+    function barOptions() {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0B1120',
+            borderColor: 'rgba(16,185,129,.4)',
+            borderWidth: 1,
+            titleColor: '#F9FAFB',
+            bodyColor:  '#9CA3AF',
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#9CA3AF', maxRotation: 30 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { ticks: { color: '#9CA3AF' },                  grid: { color: 'rgba(255,255,255,0.05)' } }
+        }
+      };
+    }
+
+    // =============================================
+    // TABELA RESUMO
+    // =============================================
+    function renderizarTabela(registros) {
+      const mapProc = agruparPor(registros, r => r.procedimento);
+      const linhas  = [...mapProc.entries()]
+        .map(([proc, rows]) => ({
+          proc,
+          qtd: rows.length,
+          mediaEspera: media(rows.map(r => r.diasEspera))
+        }))
+        .sort((a, b) => b.mediaEspera - a.mediaEspera);
+
+      const tbody = document.getElementById('tabelaBody');
+      tbody.innerHTML = '';
+
+      linhas.forEach(l => {
+        const cls = l.mediaEspera > 90 ? 'badge-high' : l.mediaEspera > 60 ? 'badge-medium' : 'badge-low';
+        const tr  = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${l.proc}</td>
+          <td>${l.qtd}</td>
+          <td class="${cls}">${l.mediaEspera.toFixed(1)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // =============================================
+    // INICIALIZAÇÃO
+    // =============================================
+    window.onload = carregarDados;
+  </script>
+
+</body>
+</html>
