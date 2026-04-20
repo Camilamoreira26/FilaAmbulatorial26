@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -22,8 +21,6 @@
       --border:         rgba(16,185,129,.25);
       --radius:         12px;
       --shadow:         0 4px 24px rgba(0,0,0,.5);
-
-      /* Cores de risco */
       --risco-vermelho: #EF4444;
       --risco-amarelo:  #F59E0B;
       --risco-verde:    #10B981;
@@ -37,28 +34,200 @@
       min-height: 100vh;
     }
 
-    /* ── Header ── */
+    /* ══════════════════════════════════
+       TELA DE LOGIN
+    ══════════════════════════════════ */
+    #loginScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 50% 40%, #0a2040 0%, #050816 70%);
+      padding: 24px;
+    }
+
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 48px 40px 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 8px 48px rgba(0,0,0,.7), 0 0 0 1px rgba(16,185,129,.1);
+      text-align: center;
+    }
+
+    .login-logo {
+      max-width: 160px;
+      max-height: 80px;
+      object-fit: contain;
+      margin-bottom: 24px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .login-logo-placeholder {
+      width: 64px;
+      height: 64px;
+      background: var(--emerald-glow);
+      border: 2px solid var(--emerald);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 1.8rem;
+    }
+
+    .login-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--emerald);
+      margin-bottom: 4px;
+    }
+    .login-subtitle {
+      font-size: .82rem;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+    }
+
+    .form-group {
+      text-align: left;
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: .76rem;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: .9rem;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .form-group input:focus {
+      border-color: var(--emerald);
+      box-shadow: 0 0 0 3px rgba(16,185,129,.15);
+    }
+
+    .btn-login {
+      width: 100%;
+      background: var(--emerald);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background .2s, transform .1s;
+      letter-spacing: .3px;
+    }
+    .btn-login:hover    { background: var(--emerald-dark); }
+    .btn-login:active   { transform: scale(.98); }
+    .btn-login:disabled { opacity: .5; cursor: not-allowed; }
+
+    #loginError {
+      margin-top: 14px;
+      font-size: .82rem;
+      color: #F87171;
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.3);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: none;
+    }
+
+    /* ══════════════════════════════════
+       DASHBOARD
+    ══════════════════════════════════ */
+    #dashboardScreen { display: none; }
+
     header {
       background: linear-gradient(135deg, #071a2e 0%, #0a2040 100%);
       border-bottom: 1px solid var(--border);
-      padding: 20px 32px;
+      padding: 14px 32px;
       position: sticky;
       top: 0;
       z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
     }
-    header h1 { font-size: 1.45rem; font-weight: 700; color: var(--emerald); }
-    header p  { font-size: .85rem; color: var(--text-secondary); margin-top: 2px; }
-
-    main { max-width: 1400px; margin: 0 auto; padding: 28px 24px 48px; }
-
-    /* ── Controles ── */
-    .controls {
+    .header-left {
       display: flex;
       align-items: center;
       gap: 16px;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
     }
+    .header-logo {
+      max-height: 40px;
+      max-width: 120px;
+      object-fit: contain;
+    }
+    .header-logo-placeholder {
+      width: 38px;
+      height: 38px;
+      background: var(--emerald-glow);
+      border: 1px solid var(--emerald);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .header-text h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--emerald);
+      line-height: 1.2;
+    }
+    .header-text p {
+      font-size: .78rem;
+      color: var(--text-secondary);
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .user-badge {
+      font-size: .8rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .user-badge strong { color: var(--text-primary); }
+    .btn-logout {
+      background: transparent;
+      border: 1px solid rgba(239,68,68,.4);
+      color: #F87171;
+      border-radius: 7px;
+      padding: 6px 14px;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,.1); }
+
+    main { max-width: 1400px; margin: 0 auto; padding: 28px 24px 48px; }
+
+    /* Controles */
+    .controls { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
     .btn-refresh {
       background: var(--emerald);
       color: #fff;
@@ -73,35 +242,29 @@
     .btn-refresh:hover    { background: var(--emerald-dark); }
     .btn-refresh:active   { transform: scale(.97); }
     .btn-refresh:disabled { opacity: .5; cursor: not-allowed; }
-    #status               { font-size: .82rem; color: var(--text-secondary); }
-    #status.error         { color: #F87171; }
+    #status       { font-size: .82rem; color: var(--text-secondary); }
+    #status.error { color: #F87171; }
 
-    /* ── Seção de KPIs ── */
+    /* KPIs */
     .kpi-section-title {
-      font-size: .75rem;
+      font-size: .74rem;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: var(--text-secondary);
       margin-bottom: 10px;
-      margin-top: 4px;
     }
-
-    /* Linha 1: KPIs gerais (2 cards) */
     .kpi-grid-geral {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
       margin-bottom: 16px;
     }
-
-    /* Linha 2: KPIs de risco (4 cards) */
     .kpi-grid-risco {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
       margin-bottom: 32px;
     }
-
     .kpi-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -115,7 +278,6 @@
     .kpi-card.risco-amarelo  { border-color: rgba(245,158,11,.4); }
     .kpi-card.risco-verde    { border-color: rgba(16,185,129,.4); }
     .kpi-card.risco-azul     { border-color: rgba(59,130,246,.4); }
-
     .kpi-card::before {
       content: '';
       position: absolute;
@@ -125,7 +287,6 @@
       transition: opacity .3s;
     }
     .kpi-card:hover::before { opacity: 1; }
-
     .kpi-label {
       font-size: .75rem;
       text-transform: uppercase;
@@ -133,18 +294,12 @@
       color: var(--text-secondary);
       margin-bottom: 6px;
     }
-    .kpi-value {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--emerald);
-      line-height: 1;
-    }
+    .kpi-value { font-size: 2rem; font-weight: 700; color: var(--emerald); line-height: 1; }
     .kpi-card.risco-vermelho .kpi-value { color: var(--risco-vermelho); }
     .kpi-card.risco-amarelo  .kpi-value { color: var(--risco-amarelo); }
     .kpi-card.risco-verde    .kpi-value { color: var(--risco-verde); }
     .kpi-card.risco-azul     .kpi-value { color: var(--risco-azul); }
-
-    .kpi-unit     { font-size: .78rem; color: var(--text-secondary); margin-top: 4px; }
+    .kpi-unit { font-size: .78rem; color: var(--text-secondary); margin-top: 4px; }
     .kpi-pct {
       display: inline-block;
       font-size: .72rem;
@@ -153,19 +308,13 @@
       border-radius: 20px;
       margin-top: 6px;
     }
-    .risco-vermelho .kpi-pct { background: rgba(239,68,68,.15); color: var(--risco-vermelho); }
-    .risco-amarelo  .kpi-pct { background: rgba(245,158,11,.15); color: var(--risco-amarelo); }
-    .risco-verde    .kpi-pct { background: rgba(16,185,129,.15); color: var(--risco-verde); }
-    .risco-azul     .kpi-pct { background: rgba(59,130,246,.15); color: var(--risco-azul); }
+    .risco-vermelho .kpi-pct { background: rgba(239,68,68,.15);   color: var(--risco-vermelho); }
+    .risco-amarelo  .kpi-pct { background: rgba(245,158,11,.15);  color: var(--risco-amarelo); }
+    .risco-verde    .kpi-pct { background: rgba(16,185,129,.15);  color: var(--risco-verde); }
+    .risco-azul     .kpi-pct { background: rgba(59,130,246,.15);  color: var(--risco-azul); }
+    .kpi-risco-label { font-size: .7rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.3; }
 
-    .kpi-risco-label {
-      font-size: .7rem;
-      color: var(--text-secondary);
-      margin-top: 4px;
-      line-height: 1.3;
-    }
-
-    /* ── Gráficos ── */
+    /* Gráficos */
     .charts-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -173,7 +322,6 @@
       margin-bottom: 32px;
     }
     @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
-
     .chart-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -191,7 +339,7 @@
     }
     .chart-wrap { position: relative; height: 260px; }
 
-    /* ── Tabela ── */
+    /* Tabela */
     .table-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -211,15 +359,7 @@
       border-bottom: 1px solid var(--border);
     }
     .table-header-row h2 { font-size: .9rem; font-weight: 600; color: var(--text-primary); }
-
-    .table-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    /* Toggle de visualização */
+    .table-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .toggle-group {
       display: flex;
       background: var(--bg-card-alt);
@@ -237,23 +377,9 @@
       cursor: pointer;
       transition: background .2s, color .2s;
     }
-    .toggle-btn.active {
-      background: var(--emerald);
-      color: #fff;
-    }
-
-    /* Barra de pesquisa */
-    .search-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-    .search-wrap svg {
-      position: absolute;
-      left: 10px;
-      color: var(--text-secondary);
-      pointer-events: none;
-    }
+    .toggle-btn.active { background: var(--emerald); color: #fff; }
+    .search-wrap { position: relative; display: flex; align-items: center; }
+    .search-wrap svg { position: absolute; left: 10px; color: var(--text-secondary); pointer-events: none; }
     #searchInput {
       background: var(--bg-card-alt);
       border: 1px solid var(--border);
@@ -266,7 +392,7 @@
       transition: border-color .2s;
     }
     #searchInput::placeholder { color: var(--text-secondary); }
-    #searchInput:focus { border-color: var(--emerald); }
+    #searchInput:focus        { border-color: var(--emerald); }
 
     table { width: 100%; border-collapse: collapse; font-size: .84rem; }
     thead th {
@@ -284,194 +410,338 @@
     tbody tr:hover { background: rgba(16,185,129,.06); }
     tbody td { padding: 9px 14px; color: var(--text-primary); }
     .td-right { text-align: right; font-variant-numeric: tabular-nums; }
-
     .badge-alto   { color: var(--risco-vermelho); font-weight: 600; }
     .badge-medio  { color: var(--risco-amarelo); }
     .badge-normal { color: var(--risco-verde); }
     .badge-baixo  { color: var(--risco-azul); }
-
-    /* Bolinha colorida de risco */
-    .dot {
-      display: inline-block;
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
+    .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
     .dot-vermelho { background: var(--risco-vermelho); }
     .dot-amarelo  { background: var(--risco-amarelo); }
     .dot-verde    { background: var(--risco-verde); }
     .dot-azul     { background: var(--risco-azul); }
     .dot-outro    { background: var(--text-secondary); }
-
     .empty-row td { color: var(--text-secondary); text-align: center; padding: 28px; }
   </style>
 </head>
-
 <body>
 
-  <header>
-    <h1>Painel de Fila Ambulatorial – Emerald Night</h1>
-    <p>Análise de Espera e Procedimentos</p>
-  </header>
+  <!-- ══════════════════════════════════
+       TELA DE LOGIN
+  ══════════════════════════════════ -->
+  <div id="loginScreen">
+    <div class="login-card">
 
-  <main>
+      <!-- Logo: substitua LOGO_URL pela URL da sua imagem -->
+      <!-- Se LOGO_URL estiver vazio, aparece um ícone padrão -->
+      <div id="loginLogoWrap"></div>
 
-    <!-- Controles -->
-    <div class="controls">
-      <button class="btn-refresh" id="btnRefresh" onclick="carregarDados()">
-        ⟳ Atualizar dados do Google Sheets
-      </button>
-      <span id="status">Aguardando dados…</span>
+      <div class="login-title">Fila Ambulatorial</div>
+      <div class="login-subtitle">Acesso restrito — insira suas credenciais</div>
+
+      <div class="form-group">
+        <label for="inputUsuario">Usuário</label>
+        <input type="text" id="inputUsuario" placeholder="seu.usuario" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="inputSenha">Senha</label>
+        <input type="password" id="inputSenha" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+
+      <button class="btn-login" id="btnLogin" onclick="fazerLogin()">Entrar</button>
+      <div id="loginError"></div>
     </div>
+  </div>
 
-    <!-- KPIs Gerais -->
-    <div class="kpi-section-title">Visão Geral</div>
-    <div class="kpi-grid-geral">
-      <div class="kpi-card">
-        <div class="kpi-label">Tempo Médio de Espera</div>
-        <div class="kpi-value" id="kpiMedia">—</div>
-        <div class="kpi-unit">dias</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Total de Solicitações</div>
-        <div class="kpi-value" id="kpiTotal">—</div>
-        <div class="kpi-unit">registros</div>
-      </div>
-    </div>
+  <!-- ══════════════════════════════════
+       DASHBOARD
+  ══════════════════════════════════ -->
+  <div id="dashboardScreen">
 
-    <!-- KPIs por Risco -->
-    <div class="kpi-section-title">Distribuição por Risco</div>
-    <div class="kpi-grid-risco">
-      <div class="kpi-card risco-vermelho">
-        <div class="kpi-label"><span class="dot dot-vermelho"></span>Prioridade Zero – Emergência</div>
-        <div class="kpi-value" id="kpiVermelho">—</div>
-        <div class="kpi-unit">pacientes</div>
-        <span class="kpi-pct" id="pctVermelho">—%</span>
-        <div class="kpi-risco-label">Atendimento imediato</div>
+    <header>
+      <div class="header-left">
+        <div id="headerLogoWrap"></div>
+        <div class="header-text">
+          <h1>Painel de Fila Ambulatorial</h1>
+          <p>Análise de Espera e Procedimentos</p>
+        </div>
       </div>
-      <div class="kpi-card risco-amarelo">
-        <div class="kpi-label"><span class="dot dot-amarelo"></span>Prioridade 1 – Urgência</div>
-        <div class="kpi-value" id="kpiAmarelo">—</div>
-        <div class="kpi-unit">pacientes</div>
-        <span class="kpi-pct" id="pctAmarelo">—%</span>
-        <div class="kpi-risco-label">Atendimento o mais rápido possível</div>
+      <div class="header-right">
+        <div class="user-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+          Olá, <strong id="nomeUsuario">—</strong>
+        </div>
+        <button class="btn-logout" onclick="fazerLogout()">Sair</button>
       </div>
-      <div class="kpi-card risco-verde">
-        <div class="kpi-label"><span class="dot dot-verde"></span>Prioridade 2 – Não urgente</div>
-        <div class="kpi-value" id="kpiVerde">—</div>
-        <div class="kpi-unit">pacientes</div>
-        <span class="kpi-pct" id="pctVerde">—%</span>
-        <div class="kpi-risco-label">Prioridade não urgente</div>
-      </div>
-      <div class="kpi-card risco-azul">
-        <div class="kpi-label"><span class="dot dot-azul"></span>Prioridade 3 – Eletivo</div>
-        <div class="kpi-value" id="kpiAzul">—</div>
-        <div class="kpi-unit">pacientes</div>
-        <span class="kpi-pct" id="pctAzul">—%</span>
-        <div class="kpi-risco-label">Atendimento eletivo</div>
-      </div>
-    </div>
+    </header>
 
-    <!-- Gráficos -->
-    <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-title">Distribuição por Faixa de Dias em Espera</div>
-        <div class="chart-wrap"><canvas id="chartFaixas"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">Pacientes por Nível de Risco</div>
-        <div class="chart-wrap"><canvas id="chartRisco"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">Quantidade de Pacientes por Procedimento</div>
-        <div class="chart-wrap"><canvas id="chartQtdProc"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">Faixa Etária por Grupo de Risco</div>
-        <div class="chart-wrap"><canvas id="chartEtarioRisco"></canvas></div>
-      </div>
-    </div>
+    <main>
 
-    <!-- Tabela -->
-    <div class="table-card">
-      <div class="table-header-row">
-        <h2>Resumo</h2>
-        <div class="table-controls">
-          <!-- Toggle de visualização -->
-          <div class="toggle-group">
-            <button class="toggle-btn active" id="btnProcedimento" onclick="setModo('procedimento')">
-              Por Procedimento
-            </button>
-            <button class="toggle-btn" id="btnPaciente" onclick="setModo('paciente')">
-              Por Paciente
-            </button>
-          </div>
-          <!-- Barra de pesquisa -->
-          <div class="search-wrap">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input type="text" id="searchInput" placeholder="Pesquisar…" oninput="filtrarTabela()" />
-          </div>
+      <div class="controls">
+        <button class="btn-refresh" id="btnRefresh" onclick="carregarDados()">
+          ⟳ Atualizar dados
+        </button>
+        <span id="status">Aguardando dados…</span>
+      </div>
+
+      <div class="kpi-section-title">Visão Geral</div>
+      <div class="kpi-grid-geral">
+        <div class="kpi-card">
+          <div class="kpi-label">Tempo Médio de Espera</div>
+          <div class="kpi-value" id="kpiMedia">—</div>
+          <div class="kpi-unit">dias</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total de Solicitações</div>
+          <div class="kpi-value" id="kpiTotal">—</div>
+          <div class="kpi-unit">registros</div>
         </div>
       </div>
 
-      <table>
-        <thead id="tableHead"></thead>
-        <tbody id="tabelaBody">
-          <tr class="empty-row"><td colspan="5">Carregando…</td></tr>
-        </tbody>
-      </table>
-    </div>
+      <div class="kpi-section-title">Distribuição por Risco</div>
+      <div class="kpi-grid-risco">
+        <div class="kpi-card risco-vermelho">
+          <div class="kpi-label"><span class="dot dot-vermelho"></span>Prioridade Zero – Emergência</div>
+          <div class="kpi-value" id="kpiVermelho">—</div>
+          <div class="kpi-unit">pacientes</div>
+          <span class="kpi-pct" id="pctVermelho">—%</span>
+          <div class="kpi-risco-label">Atendimento imediato</div>
+        </div>
+        <div class="kpi-card risco-amarelo">
+          <div class="kpi-label"><span class="dot dot-amarelo"></span>Prioridade 1 – Urgência</div>
+          <div class="kpi-value" id="kpiAmarelo">—</div>
+          <div class="kpi-unit">pacientes</div>
+          <span class="kpi-pct" id="pctAmarelo">—%</span>
+          <div class="kpi-risco-label">Atendimento o mais rápido possível</div>
+        </div>
+        <div class="kpi-card risco-verde">
+          <div class="kpi-label"><span class="dot dot-verde"></span>Prioridade 2 – Não urgente</div>
+          <div class="kpi-value" id="kpiVerde">—</div>
+          <div class="kpi-unit">pacientes</div>
+          <span class="kpi-pct" id="pctVerde">—%</span>
+          <div class="kpi-risco-label">Prioridade não urgente</div>
+        </div>
+        <div class="kpi-card risco-azul">
+          <div class="kpi-label"><span class="dot dot-azul"></span>Prioridade 3 – Eletivo</div>
+          <div class="kpi-value" id="kpiAzul">—</div>
+          <div class="kpi-unit">pacientes</div>
+          <span class="kpi-pct" id="pctAzul">—%</span>
+          <div class="kpi-risco-label">Atendimento eletivo</div>
+        </div>
+      </div>
 
-  </main>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Distribuição por Faixa de Dias em Espera</div>
+          <div class="chart-wrap"><canvas id="chartFaixas"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Pacientes por Nível de Risco</div>
+          <div class="chart-wrap"><canvas id="chartRisco"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Quantidade de Pacientes por Procedimento</div>
+          <div class="chart-wrap"><canvas id="chartQtdProc"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Faixa Etária por Grupo de Risco</div>
+          <div class="chart-wrap"><canvas id="chartEtarioRisco"></canvas></div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header-row">
+          <h2>Resumo</h2>
+          <div class="table-controls">
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="btnProcedimento" onclick="setModo('procedimento')">Por Procedimento</button>
+              <button class="toggle-btn"         id="btnPaciente"    onclick="setModo('paciente')">Por Paciente</button>
+            </div>
+            <div class="search-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input type="text" id="searchInput" placeholder="Pesquisar…" oninput="renderizarTabela()" />
+            </div>
+          </div>
+        </div>
+        <table>
+          <thead id="tableHead"></thead>
+          <tbody id="tabelaBody">
+            <tr class="empty-row"><td colspan="5">Aguardando dados…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </main>
+  </div><!-- fim dashboardScreen -->
 
   <script>
     // =============================================
     // ⚙️ CONFIGURAÇÃO
-    // Cole aqui a URL do Web App do Apps Script
     // =============================================
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdPueLojUJrUVamHFbd2Zi_qdfhPLhCRYVR4oSkk-fXW09U6m9qASsrfAMeVl9y_-K5Q/exec';
+
+    // URL da logo (pode ser GitHub raw, Google Drive público, etc.)
+    // Deixe vazio ('') para usar o ícone padrão
+    const LOGO_URL = 'img/logo.png';
+
+    // ── Constante do token na sessionStorage ──
+    const TOKEN_KEY = 'fila_token';
+    const NOME_KEY  = 'fila_nome';
 
     // ── Estado global ──
     let todosRegistros = [];
     let modoTabela     = 'procedimento';
 
     // ── Instâncias de gráficos ──
-    let chartFaixasInst       = null;
-    let chartRiscoInst        = null;
-    let chartQtdProcInst      = null;
-    let chartEtarioRiscoInst  = null;
+    let chartFaixasInst      = null;
+    let chartRiscoInst       = null;
+    let chartQtdProcInst     = null;
+    let chartEtarioRiscoInst = null;
 
-    // Mapeamento de cor → metadados do risco
     const RISCO = {
-      vermelho: { label: 'Prioridade Zero – Emergência',  cor: '#EF4444', bg: 'rgba(239,68,68,.7)' },
-      amarelo:  { label: 'Prioridade 1 – Urgência',       cor: '#F59E0B', bg: 'rgba(245,158,11,.7)' },
-      verde:    { label: 'Prioridade 2 – Não urgente',    cor: '#10B981', bg: 'rgba(16,185,129,.7)' },
-      azul:     { label: 'Prioridade 3 – Eletivo',        cor: '#3B82F6', bg: 'rgba(59,130,246,.7)' },
+      vermelho: { label: 'Prioridade Zero – Emergência', cor: '#EF4444', bg: 'rgba(239,68,68,.7)' },
+      amarelo:  { label: 'Prioridade 1 – Urgência',      cor: '#F59E0B', bg: 'rgba(245,158,11,.7)' },
+      verde:    { label: 'Prioridade 2 – Não urgente',   cor: '#10B981', bg: 'rgba(16,185,129,.7)' },
+      azul:     { label: 'Prioridade 3 – Eletivo',       cor: '#3B82F6', bg: 'rgba(59,130,246,.7)' },
     };
     const RISCO_ORDEM = ['vermelho', 'amarelo', 'verde', 'azul'];
+
+    // =============================================
+    // INICIALIZAÇÃO – logo e sessão
+    // =============================================
+    window.onload = function () {
+      renderizarLogos();
+
+      const token = sessionStorage.getItem(TOKEN_KEY);
+      const nome  = sessionStorage.getItem(NOME_KEY);
+
+      if (token) {
+        mostrarDashboard(nome);
+        carregarDados();
+      } else {
+        mostrarLogin();
+      }
+
+      // Login ao pressionar Enter
+      document.getElementById('inputSenha').addEventListener('keydown', e => {
+        if (e.key === 'Enter') fazerLogin();
+      });
+      document.getElementById('inputUsuario').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('inputSenha').focus();
+      });
+    };
+
+    function renderizarLogos() {
+      const loginWrap  = document.getElementById('loginLogoWrap');
+      const headerWrap = document.getElementById('headerLogoWrap');
+
+      if (LOGO_URL) {
+        loginWrap.innerHTML  = `<img src="${LOGO_URL}" class="login-logo" alt="Logo" />`;
+        headerWrap.innerHTML = `<img src="${LOGO_URL}" class="header-logo" alt="Logo" />`;
+      } else {
+        loginWrap.innerHTML  = `<div class="login-logo-placeholder">🏥</div>`;
+        headerWrap.innerHTML = `<div class="header-logo-placeholder">🏥</div>`;
+      }
+    }
+
+    function mostrarLogin() {
+      document.getElementById('loginScreen').style.display    = 'flex';
+      document.getElementById('dashboardScreen').style.display = 'none';
+      setTimeout(() => document.getElementById('inputUsuario').focus(), 100);
+    }
+
+    function mostrarDashboard(nome) {
+      document.getElementById('loginScreen').style.display    = 'none';
+      document.getElementById('dashboardScreen').style.display = 'block';
+      document.getElementById('nomeUsuario').textContent = nome || 'Usuário';
+    }
+
+    // =============================================
+    // LOGIN
+    // =============================================
+    async function fazerLogin() {
+      const usuario = document.getElementById('inputUsuario').value.trim();
+      const senha   = document.getElementById('inputSenha').value.trim();
+      const btn     = document.getElementById('btnLogin');
+      const errEl   = document.getElementById('loginError');
+
+      errEl.style.display = 'none';
+
+      if (!usuario || !senha) {
+        mostrarErroLogin('Preencha o usuário e a senha.');
+        return;
+      }
+
+      btn.disabled     = true;
+      btn.textContent  = 'Verificando…';
+
+      try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'login', usuario, senha })
+        });
+
+        const json = await response.json();
+
+        if (json.status === 'ok') {
+          sessionStorage.setItem(TOKEN_KEY, json.token);
+          sessionStorage.setItem(NOME_KEY,  json.nome);
+          mostrarDashboard(json.nome);
+          carregarDados();
+        } else {
+          mostrarErroLogin(json.message || 'Acesso negado.');
+        }
+      } catch (err) {
+        mostrarErroLogin('Erro de conexão. Verifique a URL do Apps Script.');
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Entrar';
+      }
+    }
+
+    function mostrarErroLogin(msg) {
+      const el = document.getElementById('loginError');
+      el.textContent  = msg;
+      el.style.display = 'block';
+    }
+
+    function fazerLogout() {
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(NOME_KEY);
+      document.getElementById('inputSenha').value = '';
+      mostrarLogin();
+    }
 
     // =============================================
     // BUSCA DE DADOS
     // =============================================
     async function carregarDados() {
+      const token = sessionStorage.getItem(TOKEN_KEY);
+      if (!token) { fazerLogout(); return; }
+
       const btn = document.getElementById('btnRefresh');
       btn.disabled = true;
       setStatus('Carregando dados…', false);
 
       try {
-        const response = await fetch(APPS_SCRIPT_URL);
+        const response = await fetch(`${APPS_SCRIPT_URL}?token=${encodeURIComponent(token)}`);
         if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
 
         const json = await response.json();
+
+        if (json.status === 'unauthorized') {
+          fazerLogout();
+          return;
+        }
         if (json.status === 'error') throw new Error(json.message);
 
         onDataLoaded(json.data);
       } catch (err) {
-        onError(err);
+        setStatus('Erro: ' + (err.message || err), true);
       } finally {
         btn.disabled = false;
       }
@@ -482,8 +752,7 @@
         setStatus('Nenhum dado encontrado na planilha.', true);
         return;
       }
-
-      setStatus('Dados atualizados em: ' + new Date().toLocaleString('pt-BR'), false);
+      setStatus('Atualizado em: ' + new Date().toLocaleString('pt-BR'), false);
 
       todosRegistros = dados
         .map(d => ({ ...d, diasEspera: Number(d.diasEspera) }))
@@ -494,14 +763,10 @@
       renderizarTabela();
     }
 
-    function onError(err) {
-      setStatus('Erro ao carregar dados: ' + (err.message || err), true);
-    }
-
     function setStatus(msg, isError) {
       const el = document.getElementById('status');
       el.textContent = msg;
-      el.className = isError ? 'error' : '';
+      el.className   = isError ? 'error' : '';
     }
 
     // =============================================
@@ -549,9 +814,8 @@
       return str && str.length > n ? str.slice(0, n) + '…' : (str || '');
     }
 
-    /** Normaliza a cor do risco para chave do objeto RISCO */
     function normalizarCor(cor) {
-      const c = (cor || '').toLowerCase().trim();
+      const c = (cor || '').toLowerCase();
       if (c.includes('verm')) return 'vermelho';
       if (c.includes('amar')) return 'amarelo';
       if (c.includes('verd')) return 'verde';
@@ -564,24 +828,18 @@
     // =============================================
     function renderizarKPIs(registros) {
       const total = registros.length;
-      const dias  = registros.map(r => r.diasEspera);
-
-      document.getElementById('kpiMedia').textContent = media(dias).toFixed(1);
+      document.getElementById('kpiMedia').textContent = media(registros.map(r => r.diasEspera)).toFixed(1);
       document.getElementById('kpiTotal').textContent = total;
 
-      // Contagem por cor de risco
-      const contRisco = { vermelho: 0, amarelo: 0, verde: 0, azul: 0 };
-      registros.forEach(r => {
-        const cor = normalizarCor(r.corRisco);
-        if (cor) contRisco[cor]++;
-      });
+      const cont = { vermelho: 0, amarelo: 0, verde: 0, azul: 0 };
+      registros.forEach(r => { const c = normalizarCor(r.corRisco); if (c) cont[c]++; });
 
       RISCO_ORDEM.forEach(cor => {
-        const qtd = contRisco[cor];
+        const qtd = cont[cor];
         const pct = total > 0 ? ((qtd / total) * 100).toFixed(1) : '0.0';
-        const nomeCor = cor.charAt(0).toUpperCase() + cor.slice(1);
-        document.getElementById('kpi' + nomeCor).textContent  = qtd;
-        document.getElementById('pct' + nomeCor).textContent  = pct + '%';
+        const id  = cor.charAt(0).toUpperCase() + cor.slice(1);
+        document.getElementById('kpi' + id).textContent = qtd;
+        document.getElementById('pct' + id).textContent = pct + '%';
       });
     }
 
@@ -599,65 +857,53 @@
       if (chartQtdProcInst)     { chartQtdProcInst.destroy();     chartQtdProcInst     = null; }
       if (chartEtarioRiscoInst) { chartEtarioRiscoInst.destroy(); chartEtarioRiscoInst = null; }
 
-      // ── Gráfico 1: Faixas de dias ──
+      const tip = {
+        backgroundColor: '#0B1120',
+        borderColor: 'rgba(16,185,129,.4)',
+        borderWidth: 1,
+        titleColor: '#F9FAFB',
+        bodyColor: '#9CA3AF',
+      };
+
+      // Gráfico 1 – Faixas de dias
       const faixasOrdem = ['0–30', '31–60', '61–90', '>90'];
-      const contFaixas  = Object.fromEntries(faixasOrdem.map(f => [f, 0]));
-      registros.forEach(r => { contFaixas[faixaDias(r.diasEspera)]++; });
+      const contF = Object.fromEntries(faixasOrdem.map(f => [f, 0]));
+      registros.forEach(r => { contF[faixaDias(r.diasEspera)]++; });
 
-      chartFaixasInst = new Chart(
-        document.getElementById('chartFaixas').getContext('2d'),
-        {
-          type: 'bar',
-          data: {
-            labels: faixasOrdem,
-            datasets: [{
-              label: 'Pacientes',
-              data: faixasOrdem.map(f => contFaixas[f]),
-              backgroundColor: ['#10B981','#059669','#047857','#065F46'],
-              borderRadius: 6,
-              borderSkipped: false,
-            }]
-          },
-          options: barOptions()
-        }
-      );
-
-      // ── Gráfico 2: Pacientes por nível de risco ──
-      const contRisco = { vermelho: 0, amarelo: 0, verde: 0, azul: 0 };
-      registros.forEach(r => {
-        const cor = normalizarCor(r.corRisco);
-        if (cor) contRisco[cor]++;
+      chartFaixasInst = new Chart(document.getElementById('chartFaixas').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: faixasOrdem,
+          datasets: [{ label: 'Pacientes', data: faixasOrdem.map(f => contF[f]),
+            backgroundColor: ['#10B981','#059669','#047857','#065F46'],
+            borderRadius: 6, borderSkipped: false }]
+        },
+        options: barOpts(tip)
       });
 
-      chartRiscoInst = new Chart(
-        document.getElementById('chartRisco').getContext('2d'),
-        {
-          type: 'doughnut',
-          data: {
-            labels: RISCO_ORDEM.map(c => RISCO[c].label),
-            datasets: [{
-              data:            RISCO_ORDEM.map(c => contRisco[c]),
-              backgroundColor: RISCO_ORDEM.map(c => RISCO[c].bg),
-              borderColor:     RISCO_ORDEM.map(c => RISCO[c].cor),
-              borderWidth: 2,
-              hoverOffset: 6,
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'right',
-                labels: { color: '#9CA3AF', boxWidth: 12, padding: 14, font: { size: 11 } }
-              },
-              tooltip: tooltipOpts()
-            }
+      // Gráfico 2 – Donut risco
+      const contR = { vermelho: 0, amarelo: 0, verde: 0, azul: 0 };
+      registros.forEach(r => { const c = normalizarCor(r.corRisco); if (c) contR[c]++; });
+
+      chartRiscoInst = new Chart(document.getElementById('chartRisco').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: RISCO_ORDEM.map(c => RISCO[c].label),
+          datasets: [{ data: RISCO_ORDEM.map(c => contR[c]),
+            backgroundColor: RISCO_ORDEM.map(c => RISCO[c].bg),
+            borderColor:     RISCO_ORDEM.map(c => RISCO[c].cor),
+            borderWidth: 2, hoverOffset: 6 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right', labels: { color: '#9CA3AF', boxWidth: 12, padding: 14, font: { size: 11 } } },
+            tooltip: tip
           }
         }
-      );
+      });
 
-      // ── Gráfico 3: Quantidade por procedimento ──
+      // Gráfico 3 – Qtde por procedimento
       const mapProc   = agruparPor(registros, r => r.procedimento);
       const statsProc = [...mapProc.entries()]
         .map(([proc, rows]) => ({ proc, qtd: rows.length }))
@@ -665,83 +911,55 @@
 
       const CORES = ['#10B981','#059669','#3B82F6','#6366F1','#F59E0B','#EC4899','#14B8A6','#8B5CF6','#F97316','#22D3EE'];
 
-      chartQtdProcInst = new Chart(
-        document.getElementById('chartQtdProc').getContext('2d'),
-        {
-          type: 'bar',
-          data: {
-            labels: statsProc.map(d => truncar(d.proc, 38)),
-            datasets: [{
-              label: 'Pacientes',
-              data: statsProc.map(d => d.qtd),
-              backgroundColor: CORES.slice(0, statsProc.length).map(c => c + 'CC'),
-              borderColor:     CORES.slice(0, statsProc.length),
-              borderWidth: 1,
-              borderRadius: 4,
-              borderSkipped: false,
-            }]
-          },
-          options: { ...barOptions(), indexAxis: 'y' }
-        }
-      );
+      chartQtdProcInst = new Chart(document.getElementById('chartQtdProc').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: statsProc.map(d => truncar(d.proc, 38)),
+          datasets: [{ label: 'Pacientes', data: statsProc.map(d => d.qtd),
+            backgroundColor: CORES.slice(0, statsProc.length).map(c => c + 'CC'),
+            borderColor:     CORES.slice(0, statsProc.length),
+            borderWidth: 1, borderRadius: 4, borderSkipped: false }]
+        },
+        options: { ...barOpts(tip), indexAxis: 'y' }
+      });
 
-      // ── Gráfico 4: Faixa etária x grupo de risco (barras agrupadas) ──
+      // Gráfico 4 – Faixa etária × risco
       const gruposEtarios = ['Pediátrico (<18)', 'Adulto (18–59)', 'Idoso (60+)'];
-
-      // Estrutura: { 'Adulto': { vermelho: 5, amarelo: 3, ... }, ... }
-      const matrizEtRisco = {};
-      gruposEtarios.forEach(g => {
-        matrizEtRisco[g] = { vermelho: 0, amarelo: 0, verde: 0, azul: 0 };
-      });
-
+      const mat = {};
+      gruposEtarios.forEach(g => { mat[g] = { vermelho: 0, amarelo: 0, verde: 0, azul: 0 }; });
       registros.forEach(r => {
-        const anos  = idadeParaAnos(r.idadePaciente);
-        const grupo = grupoEtario(anos);
+        const grupo = grupoEtario(idadeParaAnos(r.idadePaciente));
         const cor   = normalizarCor(r.corRisco);
-        if (gruposEtarios.includes(grupo) && cor) {
-          matrizEtRisco[grupo][cor]++;
-        }
+        if (gruposEtarios.includes(grupo) && cor) mat[grupo][cor]++;
       });
 
-      chartEtarioRiscoInst = new Chart(
-        document.getElementById('chartEtarioRisco').getContext('2d'),
-        {
-          type: 'bar',
-          data: {
-            labels: gruposEtarios,
-            datasets: RISCO_ORDEM.map(cor => ({
-              label: RISCO[cor].label,
-              data: gruposEtarios.map(g => matrizEtRisco[g][cor]),
-              backgroundColor: RISCO[cor].bg,
-              borderColor:     RISCO[cor].cor,
-              borderWidth: 1,
-              borderRadius: 4,
-              borderSkipped: false,
-            }))
-          },
-          options: {
-            ...barOptions(),
-            plugins: {
-              legend: {
-                display: true,
-                position: 'top',
-                labels: { color: '#9CA3AF', boxWidth: 11, padding: 12, font: { size: 10 } }
-              },
-              tooltip: tooltipOpts()
-            }
+      chartEtarioRiscoInst = new Chart(document.getElementById('chartEtarioRisco').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: gruposEtarios,
+          datasets: RISCO_ORDEM.map(cor => ({
+            label: RISCO[cor].label,
+            data: gruposEtarios.map(g => mat[g][cor]),
+            backgroundColor: RISCO[cor].bg,
+            borderColor:     RISCO[cor].cor,
+            borderWidth: 1, borderRadius: 4, borderSkipped: false
+          }))
+        },
+        options: {
+          ...barOpts(tip),
+          plugins: {
+            legend: { display: true, position: 'top',
+              labels: { color: '#9CA3AF', boxWidth: 11, padding: 12, font: { size: 10 } } },
+            tooltip: tip
           }
         }
-      );
+      });
     }
 
-    function barOptions() {
+    function barOpts(tip) {
       return {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: tooltipOpts()
-        },
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: tip },
         scales: {
           x: { ticks: { color: '#9CA3AF', maxRotation: 30 }, grid: { color: 'rgba(255,255,255,0.05)' } },
           y: { ticks: { color: '#9CA3AF' },                  grid: { color: 'rgba(255,255,255,0.05)' } }
@@ -749,63 +967,41 @@
       };
     }
 
-    function tooltipOpts() {
-      return {
-        backgroundColor: '#0B1120',
-        borderColor: 'rgba(16,185,129,.4)',
-        borderWidth: 1,
-        titleColor: '#F9FAFB',
-        bodyColor:  '#9CA3AF',
-      };
-    }
-
     // =============================================
-    // TABELA – toggle e pesquisa
+    // TABELA
     // =============================================
     function setModo(modo) {
       modoTabela = modo;
       document.getElementById('btnProcedimento').classList.toggle('active', modo === 'procedimento');
-      document.getElementById('btnPaciente').classList.toggle('active', modo === 'paciente');
+      document.getElementById('btnPaciente').classList.toggle('active',    modo === 'paciente');
       document.getElementById('searchInput').value = '';
       renderizarTabela();
     }
 
-    function filtrarTabela() {
-      renderizarTabela();
-    }
-
     function renderizarTabela() {
-      const termo  = (document.getElementById('searchInput').value || '').toLowerCase();
-      const head   = document.getElementById('tableHead');
-      const tbody  = document.getElementById('tabelaBody');
+      const termo = (document.getElementById('searchInput').value || '').toLowerCase();
+      const head  = document.getElementById('tableHead');
+      const tbody = document.getElementById('tabelaBody');
 
       if (modoTabela === 'procedimento') {
-        // ── Vista por procedimento ──
         head.innerHTML = `<tr>
           <th>Procedimento</th>
           <th class="td-right">Qtde em Fila</th>
           <th class="td-right">Tempo Médio de Espera (dias)</th>
         </tr>`;
 
-        const mapProc = agruparPor(todosRegistros, r => r.procedimento);
-        let linhas = [...mapProc.entries()]
-          .map(([proc, rows]) => ({
-            proc,
-            qtd: rows.length,
-            mediaEspera: media(rows.map(r => r.diasEspera))
-          }))
+        let linhas = [...agruparPor(todosRegistros, r => r.procedimento).entries()]
+          .map(([proc, rows]) => ({ proc, qtd: rows.length, mediaEspera: media(rows.map(r => r.diasEspera)) }))
           .sort((a, b) => b.mediaEspera - a.mediaEspera);
 
-        if (termo) {
-          linhas = linhas.filter(l =>
-            l.proc.toLowerCase().includes(termo) ||
-            String(l.qtd).includes(termo) ||
-            l.mediaEspera.toFixed(1).includes(termo)
-          );
-        }
+        if (termo) linhas = linhas.filter(l =>
+          l.proc.toLowerCase().includes(termo) ||
+          String(l.qtd).includes(termo) ||
+          l.mediaEspera.toFixed(1).includes(termo)
+        );
 
         if (!linhas.length) {
-          tbody.innerHTML = '<tr class="empty-row"><td colspan="3">Nenhum resultado encontrado.</td></tr>';
+          tbody.innerHTML = '<tr class="empty-row"><td colspan="3">Nenhum resultado.</td></tr>';
           return;
         }
 
@@ -813,16 +1009,11 @@
         linhas.forEach(l => {
           const cls = l.mediaEspera > 90 ? 'badge-alto' : l.mediaEspera > 60 ? 'badge-medio' : l.mediaEspera > 30 ? 'badge-normal' : 'badge-baixo';
           const tr  = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${l.proc}</td>
-            <td class="td-right">${l.qtd}</td>
-            <td class="td-right ${cls}">${l.mediaEspera.toFixed(1)}</td>
-          `;
+          tr.innerHTML = `<td>${l.proc}</td><td class="td-right">${l.qtd}</td><td class="td-right ${cls}">${l.mediaEspera.toFixed(1)}</td>`;
           tbody.appendChild(tr);
         });
 
       } else {
-        // ── Vista por paciente ──
         head.innerHTML = `<tr>
           <th>Paciente</th>
           <th>Procedimento</th>
@@ -833,46 +1024,34 @@
 
         let linhas = [...todosRegistros].sort((a, b) => a.paciente.localeCompare(b.paciente));
 
-        if (termo) {
-          linhas = linhas.filter(r =>
-            Object.values(r).some(v => String(v).toLowerCase().includes(termo))
-          );
-        }
+        if (termo) linhas = linhas.filter(r =>
+          Object.values(r).some(v => String(v).toLowerCase().includes(termo))
+        );
 
         if (!linhas.length) {
-          tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Nenhum resultado encontrado.</td></tr>';
+          tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Nenhum resultado.</td></tr>';
           return;
         }
 
         tbody.innerHTML = '';
         linhas.forEach(r => {
-          const cor    = normalizarCor(r.corRisco);
-          const dotCls = cor ? `dot-${cor}` : 'dot-outro';
-          const info   = cor ? RISCO[cor] : null;
-          const riscoLabel = info ? info.label : (r.risco || '—');
-          const diasCls = r.diasEspera > 90 ? 'badge-alto' : r.diasEspera > 60 ? 'badge-medio' : r.diasEspera > 30 ? 'badge-normal' : 'badge-baixo';
-
-          const tr = document.createElement('tr');
+          const cor   = normalizarCor(r.corRisco);
+          const dot   = cor ? `dot-${cor}` : 'dot-outro';
+          const label = cor ? RISCO[cor].label : (r.risco || '—');
+          const dCls  = r.diasEspera > 90 ? 'badge-alto' : r.diasEspera > 60 ? 'badge-medio' : r.diasEspera > 30 ? 'badge-normal' : 'badge-baixo';
+          const tr    = document.createElement('tr');
           tr.innerHTML = `
             <td>${r.paciente || '—'}</td>
             <td>${truncar(r.procedimento, 45)}</td>
-            <td><span class="dot ${dotCls}"></span>${riscoLabel}</td>
+            <td><span class="dot ${dot}"></span>${label}</td>
             <td class="td-right">${r.idadePaciente || '—'}</td>
-            <td class="td-right ${diasCls}">${r.diasEspera}</td>
+            <td class="td-right ${dCls}">${r.diasEspera}</td>
           `;
           tbody.appendChild(tr);
         });
       }
     }
-
-    // =============================================
-    // INICIALIZAÇÃO
-    // =============================================
-    window.onload = carregarDados;
   </script>
 
 </body>
 </html>
-
-   
-  
