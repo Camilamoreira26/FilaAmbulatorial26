@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -10,17 +11,23 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg-page:       #050816;
-      --bg-card:       #0B1120;
-      --bg-card-alt:   #0d1526;
-      --emerald:       #10B981;
-      --emerald-dark:  #059669;
-      --emerald-glow:  rgba(16,185,129,.15);
-      --text-primary:  #F9FAFB;
-      --text-secondary:#9CA3AF;
-      --border:        rgba(16,185,129,.25);
-      --radius:        12px;
-      --shadow:        0 4px 24px rgba(0,0,0,.5);
+      --bg-page:        #050816;
+      --bg-card:        #0B1120;
+      --bg-card-alt:    #0d1526;
+      --emerald:        #10B981;
+      --emerald-dark:   #059669;
+      --emerald-glow:   rgba(16,185,129,.15);
+      --text-primary:   #F9FAFB;
+      --text-secondary: #9CA3AF;
+      --border:         rgba(16,185,129,.25);
+      --radius:         12px;
+      --shadow:         0 4px 24px rgba(0,0,0,.5);
+
+      /* Cores de risco */
+      --risco-vermelho: #EF4444;
+      --risco-amarelo:  #F59E0B;
+      --risco-verde:    #10B981;
+      --risco-azul:     #3B82F6;
     }
 
     body {
@@ -39,22 +46,10 @@
       top: 0;
       z-index: 100;
     }
-    header h1 {
-      font-size: 1.45rem;
-      font-weight: 700;
-      color: var(--emerald);
-    }
-    header p {
-      font-size: .85rem;
-      color: var(--text-secondary);
-      margin-top: 2px;
-    }
+    header h1 { font-size: 1.45rem; font-weight: 700; color: var(--emerald); }
+    header p  { font-size: .85rem; color: var(--text-secondary); margin-top: 2px; }
 
-    main {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 28px 24px 48px;
-    }
+    main { max-width: 1400px; margin: 0 auto; padding: 28px 24px 48px; }
 
     /* ── Controles ── */
     .controls {
@@ -75,28 +70,52 @@
       cursor: pointer;
       transition: background .2s, transform .1s;
     }
-    .btn-refresh:hover   { background: var(--emerald-dark); }
-    .btn-refresh:active  { transform: scale(.97); }
-    .btn-refresh:disabled{ opacity: .5; cursor: not-allowed; }
-    #status { font-size: .82rem; color: var(--text-secondary); }
-    #status.error { color: #F87171; }
+    .btn-refresh:hover    { background: var(--emerald-dark); }
+    .btn-refresh:active   { transform: scale(.97); }
+    .btn-refresh:disabled { opacity: .5; cursor: not-allowed; }
+    #status               { font-size: .82rem; color: var(--text-secondary); }
+    #status.error         { color: #F87171; }
 
-    /* ── KPIs ── */
-    .kpi-grid {
+    /* ── Seção de KPIs ── */
+    .kpi-section-title {
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      margin-top: 4px;
+    }
+
+    /* Linha 1: KPIs gerais (2 cards) */
+    .kpi-grid-geral {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    /* Linha 2: KPIs de risco (4 cards) */
+    .kpi-grid-risco {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
       margin-bottom: 32px;
     }
+
     .kpi-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 22px 24px;
+      padding: 18px 22px;
       box-shadow: var(--shadow);
       position: relative;
       overflow: hidden;
     }
+    .kpi-card.risco-vermelho { border-color: rgba(239,68,68,.4); }
+    .kpi-card.risco-amarelo  { border-color: rgba(245,158,11,.4); }
+    .kpi-card.risco-verde    { border-color: rgba(16,185,129,.4); }
+    .kpi-card.risco-azul     { border-color: rgba(59,130,246,.4); }
+
     .kpi-card::before {
       content: '';
       position: absolute;
@@ -106,20 +125,45 @@
       transition: opacity .3s;
     }
     .kpi-card:hover::before { opacity: 1; }
+
     .kpi-label {
-      font-size: .78rem;
+      font-size: .75rem;
       text-transform: uppercase;
-      letter-spacing: .8px;
+      letter-spacing: .7px;
       color: var(--text-secondary);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .kpi-value {
-      font-size: 2.1rem;
+      font-size: 2rem;
       font-weight: 700;
       color: var(--emerald);
       line-height: 1;
     }
-    .kpi-unit { font-size: .8rem; color: var(--text-secondary); margin-top: 4px; }
+    .kpi-card.risco-vermelho .kpi-value { color: var(--risco-vermelho); }
+    .kpi-card.risco-amarelo  .kpi-value { color: var(--risco-amarelo); }
+    .kpi-card.risco-verde    .kpi-value { color: var(--risco-verde); }
+    .kpi-card.risco-azul     .kpi-value { color: var(--risco-azul); }
+
+    .kpi-unit     { font-size: .78rem; color: var(--text-secondary); margin-top: 4px; }
+    .kpi-pct {
+      display: inline-block;
+      font-size: .72rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-top: 6px;
+    }
+    .risco-vermelho .kpi-pct { background: rgba(239,68,68,.15); color: var(--risco-vermelho); }
+    .risco-amarelo  .kpi-pct { background: rgba(245,158,11,.15); color: var(--risco-amarelo); }
+    .risco-verde    .kpi-pct { background: rgba(16,185,129,.15); color: var(--risco-verde); }
+    .risco-azul     .kpi-pct { background: rgba(59,130,246,.15); color: var(--risco-azul); }
+
+    .kpi-risco-label {
+      font-size: .7rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      line-height: 1.3;
+    }
 
     /* ── Gráficos ── */
     .charts-grid {
@@ -156,37 +200,112 @@
       box-shadow: var(--shadow);
       overflow-x: auto;
     }
-    .table-card h2 {
-      font-size: .9rem;
-      font-weight: 600;
-      color: var(--text-primary);
+    .table-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
       margin-bottom: 16px;
-      padding-bottom: 10px;
+      padding-bottom: 14px;
       border-bottom: 1px solid var(--border);
     }
-    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .table-header-row h2 { font-size: .9rem; font-weight: 600; color: var(--text-primary); }
+
+    .table-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Toggle de visualização */
+    .toggle-group {
+      display: flex;
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .toggle-btn {
+      padding: 7px 14px;
+      font-size: .78rem;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+    .toggle-btn.active {
+      background: var(--emerald);
+      color: #fff;
+    }
+
+    /* Barra de pesquisa */
+    .search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-wrap svg {
+      position: absolute;
+      left: 10px;
+      color: var(--text-secondary);
+      pointer-events: none;
+    }
+    #searchInput {
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 12px 7px 34px;
+      font-size: .82rem;
+      color: var(--text-primary);
+      width: 240px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    #searchInput::placeholder { color: var(--text-secondary); }
+    #searchInput:focus { border-color: var(--emerald); }
+
+    table { width: 100%; border-collapse: collapse; font-size: .84rem; }
     thead th {
       background: var(--bg-card-alt);
       color: var(--emerald);
       text-align: left;
       padding: 10px 14px;
       font-weight: 600;
-      font-size: .78rem;
+      font-size: .76rem;
       text-transform: uppercase;
       letter-spacing: .6px;
       white-space: nowrap;
     }
-    tbody tr {
-      border-bottom: 1px solid rgba(255,255,255,.04);
-      transition: background .15s;
-    }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,.04); transition: background .15s; }
     tbody tr:hover { background: rgba(16,185,129,.06); }
-    tbody td { padding: 10px 14px; color: var(--text-primary); }
-    tbody td:nth-child(2),
-    tbody td:nth-child(3) { text-align: right; font-variant-numeric: tabular-nums; }
-    .badge-high   { color: var(--emerald); font-weight: 600; }
-    .badge-medium { color: #FBBF24; }
-    .badge-low    { color: var(--text-secondary); }
+    tbody td { padding: 9px 14px; color: var(--text-primary); }
+    .td-right { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .badge-alto   { color: var(--risco-vermelho); font-weight: 600; }
+    .badge-medio  { color: var(--risco-amarelo); }
+    .badge-normal { color: var(--risco-verde); }
+    .badge-baixo  { color: var(--risco-azul); }
+
+    /* Bolinha colorida de risco */
+    .dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .dot-vermelho { background: var(--risco-vermelho); }
+    .dot-amarelo  { background: var(--risco-amarelo); }
+    .dot-verde    { background: var(--risco-verde); }
+    .dot-azul     { background: var(--risco-azul); }
+    .dot-outro    { background: var(--text-secondary); }
+
+    .empty-row td { color: var(--text-secondary); text-align: center; padding: 28px; }
   </style>
 </head>
 
@@ -199,6 +318,7 @@
 
   <main>
 
+    <!-- Controles -->
     <div class="controls">
       <button class="btn-refresh" id="btnRefresh" onclick="carregarDados()">
         ⟳ Atualizar dados do Google Sheets
@@ -206,20 +326,12 @@
       <span id="status">Aguardando dados…</span>
     </div>
 
-    <div class="kpi-grid">
+    <!-- KPIs Gerais -->
+    <div class="kpi-section-title">Visão Geral</div>
+    <div class="kpi-grid-geral">
       <div class="kpi-card">
         <div class="kpi-label">Tempo Médio de Espera</div>
         <div class="kpi-value" id="kpiMedia">—</div>
-        <div class="kpi-unit">dias</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Mediana de Dias em Espera</div>
-        <div class="kpi-value" id="kpiMediana">—</div>
-        <div class="kpi-unit">dias</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Tempo Máximo de Espera</div>
-        <div class="kpi-value" id="kpiMaximo">—</div>
         <div class="kpi-unit">dias</div>
       </div>
       <div class="kpi-card">
@@ -229,39 +341,87 @@
       </div>
     </div>
 
+    <!-- KPIs por Risco -->
+    <div class="kpi-section-title">Distribuição por Risco</div>
+    <div class="kpi-grid-risco">
+      <div class="kpi-card risco-vermelho">
+        <div class="kpi-label"><span class="dot dot-vermelho"></span>Prioridade Zero – Emergência</div>
+        <div class="kpi-value" id="kpiVermelho">—</div>
+        <div class="kpi-unit">pacientes</div>
+        <span class="kpi-pct" id="pctVermelho">—%</span>
+        <div class="kpi-risco-label">Atendimento imediato</div>
+      </div>
+      <div class="kpi-card risco-amarelo">
+        <div class="kpi-label"><span class="dot dot-amarelo"></span>Prioridade 1 – Urgência</div>
+        <div class="kpi-value" id="kpiAmarelo">—</div>
+        <div class="kpi-unit">pacientes</div>
+        <span class="kpi-pct" id="pctAmarelo">—%</span>
+        <div class="kpi-risco-label">Atendimento o mais rápido possível</div>
+      </div>
+      <div class="kpi-card risco-verde">
+        <div class="kpi-label"><span class="dot dot-verde"></span>Prioridade 2 – Não urgente</div>
+        <div class="kpi-value" id="kpiVerde">—</div>
+        <div class="kpi-unit">pacientes</div>
+        <span class="kpi-pct" id="pctVerde">—%</span>
+        <div class="kpi-risco-label">Prioridade não urgente</div>
+      </div>
+      <div class="kpi-card risco-azul">
+        <div class="kpi-label"><span class="dot dot-azul"></span>Prioridade 3 – Eletivo</div>
+        <div class="kpi-value" id="kpiAzul">—</div>
+        <div class="kpi-unit">pacientes</div>
+        <span class="kpi-pct" id="pctAzul">—%</span>
+        <div class="kpi-risco-label">Atendimento eletivo</div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
     <div class="charts-grid">
       <div class="chart-card">
         <div class="chart-title">Distribuição por Faixa de Dias em Espera</div>
         <div class="chart-wrap"><canvas id="chartFaixas"></canvas></div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">Top 5 Procedimentos por Tempo Médio de Espera</div>
-        <div class="chart-wrap"><canvas id="chartTopProc"></canvas></div>
+        <div class="chart-title">Pacientes por Nível de Risco</div>
+        <div class="chart-wrap"><canvas id="chartRisco"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-title">Quantidade de Pacientes por Procedimento</div>
         <div class="chart-wrap"><canvas id="chartQtdProc"></canvas></div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">Tempo Médio de Espera por Grupo Etário</div>
-        <div class="chart-wrap"><canvas id="chartEtario"></canvas></div>
+        <div class="chart-title">Faixa Etária por Grupo de Risco</div>
+        <div class="chart-wrap"><canvas id="chartEtarioRisco"></canvas></div>
       </div>
     </div>
 
+    <!-- Tabela -->
     <div class="table-card">
-      <h2>Resumo por Procedimento</h2>
+      <div class="table-header-row">
+        <h2>Resumo</h2>
+        <div class="table-controls">
+          <!-- Toggle de visualização -->
+          <div class="toggle-group">
+            <button class="toggle-btn active" id="btnProcedimento" onclick="setModo('procedimento')">
+              Por Procedimento
+            </button>
+            <button class="toggle-btn" id="btnPaciente" onclick="setModo('paciente')">
+              Por Paciente
+            </button>
+          </div>
+          <!-- Barra de pesquisa -->
+          <div class="search-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Pesquisar…" oninput="filtrarTabela()" />
+          </div>
+        </div>
+      </div>
+
       <table>
-        <thead>
-          <tr>
-            <th>Procedimento</th>
-            <th>Qtde em Fila</th>
-            <th>Tempo Médio de Espera (dias)</th>
-          </tr>
-        </thead>
+        <thead id="tableHead"></thead>
         <tbody id="tabelaBody">
-          <tr><td colspan="3" style="color:var(--text-secondary);text-align:center;padding:24px">
-            Carregando…
-          </td></tr>
+          <tr class="empty-row"><td colspan="5">Carregando…</td></tr>
         </tbody>
       </table>
     </div>
@@ -270,25 +430,32 @@
 
   <script>
     // =============================================
-    // ⚙️ CONFIGURAÇÃO – cole aqui a URL do seu
-    // Web App gerada pelo Google Apps Script
-    // Implantar → Gerenciar implantações → copiar URL
+    // ⚙️ CONFIGURAÇÃO
+    // Cole aqui a URL do Web App do Apps Script
     // =============================================
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdPueLojUJrUVamHFbd2Zi_qdfhPLhCRYVR4oSkk-fXW09U6m9qASsrfAMeVl9y_-K5Q/exec';
+    const APPS_SCRIPT_URL = 'COLE_AQUI_A_URL_DO_SEU_WEB_APP';
 
-    // ── Instâncias dos gráficos ──
-    let chartFaixasInst  = null;
-    let chartTopProcInst = null;
-    let chartQtdProcInst = null;
-    let chartEtarioInst  = null;
+    // ── Estado global ──
+    let todosRegistros = [];
+    let modoTabela     = 'procedimento';
 
-    const CORES_SERIE = [
-      '#10B981','#059669','#3B82F6','#6366F1','#F59E0B',
-      '#EC4899','#14B8A6','#8B5CF6','#F97316','#22D3EE'
-    ];
+    // ── Instâncias de gráficos ──
+    let chartFaixasInst       = null;
+    let chartRiscoInst        = null;
+    let chartQtdProcInst      = null;
+    let chartEtarioRiscoInst  = null;
+
+    // Mapeamento de cor → metadados do risco
+    const RISCO = {
+      vermelho: { label: 'Prioridade Zero – Emergência',  cor: '#EF4444', bg: 'rgba(239,68,68,.7)' },
+      amarelo:  { label: 'Prioridade 1 – Urgência',       cor: '#F59E0B', bg: 'rgba(245,158,11,.7)' },
+      verde:    { label: 'Prioridade 2 – Não urgente',    cor: '#10B981', bg: 'rgba(16,185,129,.7)' },
+      azul:     { label: 'Prioridade 3 – Eletivo',        cor: '#3B82F6', bg: 'rgba(59,130,246,.7)' },
+    };
+    const RISCO_ORDEM = ['vermelho', 'amarelo', 'verde', 'azul'];
 
     // =============================================
-    // BUSCA DADOS VIA FETCH → Apps Script Web App
+    // BUSCA DE DADOS
     // =============================================
     async function carregarDados() {
       const btn = document.getElementById('btnRefresh');
@@ -297,19 +464,12 @@
 
       try {
         const response = await fetch(APPS_SCRIPT_URL);
-
-        if (!response.ok) {
-          throw new Error(`Erro HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
 
         const json = await response.json();
-
-        if (json.status === 'error') {
-          throw new Error(json.message);
-        }
+        if (json.status === 'error') throw new Error(json.message);
 
         onDataLoaded(json.data);
-
       } catch (err) {
         onError(err);
       } finally {
@@ -317,25 +477,21 @@
       }
     }
 
-    // =============================================
-    // CALLBACK – dados recebidos com sucesso
-    // =============================================
     function onDataLoaded(dados) {
       if (!dados || dados.length === 0) {
         setStatus('Nenhum dado encontrado na planilha.', true);
         return;
       }
 
-      const agora = new Date().toLocaleString('pt-BR');
-      setStatus('Dados atualizados em: ' + agora, false);
+      setStatus('Dados atualizados em: ' + new Date().toLocaleString('pt-BR'), false);
 
-      const registros = dados
+      todosRegistros = dados
         .map(d => ({ ...d, diasEspera: Number(d.diasEspera) }))
         .filter(d => !isNaN(d.diasEspera));
 
-      renderizarKPIs(registros);
-      renderizarGraficos(registros);
-      renderizarTabela(registros);
+      renderizarKPIs(todosRegistros);
+      renderizarGraficos(todosRegistros);
+      renderizarTabela();
     }
 
     function onError(err) {
@@ -379,13 +535,6 @@
       return arr.reduce((a, b) => a + b, 0) / arr.length;
     }
 
-    function mediana(arr) {
-      if (!arr.length) return 0;
-      const sorted = [...arr].sort((a, b) => a - b);
-      const mid = Math.floor(sorted.length / 2);
-      return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-    }
-
     function agruparPor(registros, fn) {
       const map = new Map();
       registros.forEach(r => {
@@ -397,18 +546,43 @@
     }
 
     function truncar(str, n) {
-      return str.length > n ? str.slice(0, n) + '…' : str;
+      return str && str.length > n ? str.slice(0, n) + '…' : (str || '');
+    }
+
+    /** Normaliza a cor do risco para chave do objeto RISCO */
+    function normalizarCor(cor) {
+      const c = (cor || '').toLowerCase().trim();
+      if (c.includes('verm')) return 'vermelho';
+      if (c.includes('amar')) return 'amarelo';
+      if (c.includes('verd')) return 'verde';
+      if (c.includes('azul')) return 'azul';
+      return null;
     }
 
     // =============================================
     // KPIs
     // =============================================
     function renderizarKPIs(registros) {
-      const dias = registros.map(r => r.diasEspera);
-      document.getElementById('kpiMedia').textContent   = media(dias).toFixed(1);
-      document.getElementById('kpiMediana').textContent = mediana(dias).toFixed(1);
-      document.getElementById('kpiMaximo').textContent  = Math.max(...dias);
-      document.getElementById('kpiTotal').textContent   = registros.length;
+      const total = registros.length;
+      const dias  = registros.map(r => r.diasEspera);
+
+      document.getElementById('kpiMedia').textContent = media(dias).toFixed(1);
+      document.getElementById('kpiTotal').textContent = total;
+
+      // Contagem por cor de risco
+      const contRisco = { vermelho: 0, amarelo: 0, verde: 0, azul: 0 };
+      registros.forEach(r => {
+        const cor = normalizarCor(r.corRisco);
+        if (cor) contRisco[cor]++;
+      });
+
+      RISCO_ORDEM.forEach(cor => {
+        const qtd = contRisco[cor];
+        const pct = total > 0 ? ((qtd / total) * 100).toFixed(1) : '0.0';
+        const nomeCor = cor.charAt(0).toUpperCase() + cor.slice(1);
+        document.getElementById('kpi' + nomeCor).textContent  = qtd;
+        document.getElementById('pct' + nomeCor).textContent  = pct + '%';
+      });
     }
 
     // =============================================
@@ -420,12 +594,12 @@
       Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
       Chart.defaults.font.size   = 12;
 
-      if (chartFaixasInst)  { chartFaixasInst.destroy();  chartFaixasInst  = null; }
-      if (chartTopProcInst) { chartTopProcInst.destroy(); chartTopProcInst = null; }
-      if (chartQtdProcInst) { chartQtdProcInst.destroy(); chartQtdProcInst = null; }
-      if (chartEtarioInst)  { chartEtarioInst.destroy();  chartEtarioInst  = null; }
+      if (chartFaixasInst)      { chartFaixasInst.destroy();      chartFaixasInst      = null; }
+      if (chartRiscoInst)       { chartRiscoInst.destroy();       chartRiscoInst       = null; }
+      if (chartQtdProcInst)     { chartQtdProcInst.destroy();     chartQtdProcInst     = null; }
+      if (chartEtarioRiscoInst) { chartEtarioRiscoInst.destroy(); chartEtarioRiscoInst = null; }
 
-      // Gráfico 1: Faixas de dias
+      // ── Gráfico 1: Faixas de dias ──
       const faixasOrdem = ['0–30', '31–60', '61–90', '>90'];
       const contFaixas  = Object.fromEntries(faixasOrdem.map(f => [f, 0]));
       registros.forEach(r => { contFaixas[faixaDias(r.diasEspera)]++; });
@@ -448,46 +622,60 @@
         }
       );
 
-      // Gráfico 2: Top 5 por tempo médio
-      const mapProc   = agruparPor(registros, r => r.procedimento);
-      const statsProc = [...mapProc.entries()].map(([proc, rows]) => ({
-        proc,
-        procLabel: truncar(proc, 40),
-        mediaEspera: media(rows.map(r => r.diasEspera))
-      })).sort((a, b) => b.mediaEspera - a.mediaEspera);
+      // ── Gráfico 2: Pacientes por nível de risco ──
+      const contRisco = { vermelho: 0, amarelo: 0, verde: 0, azul: 0 };
+      registros.forEach(r => {
+        const cor = normalizarCor(r.corRisco);
+        if (cor) contRisco[cor]++;
+      });
 
-      const top5 = statsProc.slice(0, 5);
-
-      chartTopProcInst = new Chart(
-        document.getElementById('chartTopProc').getContext('2d'),
+      chartRiscoInst = new Chart(
+        document.getElementById('chartRisco').getContext('2d'),
         {
-          type: 'bar',
+          type: 'doughnut',
           data: {
-            labels: top5.map(d => d.procLabel),
+            labels: RISCO_ORDEM.map(c => RISCO[c].label),
             datasets: [{
-              label: 'Dias médios',
-              data: top5.map(d => parseFloat(d.mediaEspera.toFixed(1))),
-              backgroundColor: CORES_SERIE.slice(0, 5),
-              borderRadius: 6,
-              borderSkipped: false,
+              data:            RISCO_ORDEM.map(c => contRisco[c]),
+              backgroundColor: RISCO_ORDEM.map(c => RISCO[c].bg),
+              borderColor:     RISCO_ORDEM.map(c => RISCO[c].cor),
+              borderWidth: 2,
+              hoverOffset: 6,
             }]
           },
-          options: { ...barOptions(), indexAxis: 'y' }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: { color: '#9CA3AF', boxWidth: 12, padding: 14, font: { size: 11 } }
+              },
+              tooltip: tooltipOpts()
+            }
+          }
         }
       );
 
-      // Gráfico 3: Quantidade por procedimento
+      // ── Gráfico 3: Quantidade por procedimento ──
+      const mapProc   = agruparPor(registros, r => r.procedimento);
+      const statsProc = [...mapProc.entries()]
+        .map(([proc, rows]) => ({ proc, qtd: rows.length }))
+        .sort((a, b) => b.qtd - a.qtd);
+
+      const CORES = ['#10B981','#059669','#3B82F6','#6366F1','#F59E0B','#EC4899','#14B8A6','#8B5CF6','#F97316','#22D3EE'];
+
       chartQtdProcInst = new Chart(
         document.getElementById('chartQtdProc').getContext('2d'),
         {
           type: 'bar',
           data: {
-            labels: statsProc.map(d => d.procLabel),
+            labels: statsProc.map(d => truncar(d.proc, 38)),
             datasets: [{
-              label: 'Qtde de pacientes',
-              data: statsProc.map(d => mapProc.get(d.proc).length),
-              backgroundColor: CORES_SERIE.slice(0, statsProc.length).map(c => c + 'CC'),
-              borderColor:     CORES_SERIE.slice(0, statsProc.length),
+              label: 'Pacientes',
+              data: statsProc.map(d => d.qtd),
+              backgroundColor: CORES.slice(0, statsProc.length).map(c => c + 'CC'),
+              borderColor:     CORES.slice(0, statsProc.length),
               borderWidth: 1,
               borderRadius: 4,
               borderSkipped: false,
@@ -497,32 +685,51 @@
         }
       );
 
-      // Gráfico 4: Grupo etário
-      const ordemEtaria = ['Pediátrico (<18)', 'Adulto (18–59)', 'Idoso (60+)', 'Desconhecido'];
-      const mapEtario   = new Map();
-      registros.forEach(r => {
-        const grupo = grupoEtario(idadeParaAnos(r.idadePaciente));
-        if (!mapEtario.has(grupo)) mapEtario.set(grupo, []);
-        mapEtario.get(grupo).push(r.diasEspera);
+      // ── Gráfico 4: Faixa etária x grupo de risco (barras agrupadas) ──
+      const gruposEtarios = ['Pediátrico (<18)', 'Adulto (18–59)', 'Idoso (60+)'];
+
+      // Estrutura: { 'Adulto': { vermelho: 5, amarelo: 3, ... }, ... }
+      const matrizEtRisco = {};
+      gruposEtarios.forEach(g => {
+        matrizEtRisco[g] = { vermelho: 0, amarelo: 0, verde: 0, azul: 0 };
       });
 
-      const labelsEtario = ordemEtaria.filter(g => mapEtario.has(g));
+      registros.forEach(r => {
+        const anos  = idadeParaAnos(r.idadePaciente);
+        const grupo = grupoEtario(anos);
+        const cor   = normalizarCor(r.corRisco);
+        if (gruposEtarios.includes(grupo) && cor) {
+          matrizEtRisco[grupo][cor]++;
+        }
+      });
 
-      chartEtarioInst = new Chart(
-        document.getElementById('chartEtario').getContext('2d'),
+      chartEtarioRiscoInst = new Chart(
+        document.getElementById('chartEtarioRisco').getContext('2d'),
         {
           type: 'bar',
           data: {
-            labels: labelsEtario,
-            datasets: [{
-              label: 'Dias médios',
-              data: labelsEtario.map(g => parseFloat(media(mapEtario.get(g)).toFixed(1))),
-              backgroundColor: ['#3B82F6','#10B981','#F59E0B','#6B7280'],
-              borderRadius: 6,
+            labels: gruposEtarios,
+            datasets: RISCO_ORDEM.map(cor => ({
+              label: RISCO[cor].label,
+              data: gruposEtarios.map(g => matrizEtRisco[g][cor]),
+              backgroundColor: RISCO[cor].bg,
+              borderColor:     RISCO[cor].cor,
+              borderWidth: 1,
+              borderRadius: 4,
               borderSkipped: false,
-            }]
+            }))
           },
-          options: barOptions()
+          options: {
+            ...barOptions(),
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: { color: '#9CA3AF', boxWidth: 11, padding: 12, font: { size: 10 } }
+              },
+              tooltip: tooltipOpts()
+            }
+          }
         }
       );
     }
@@ -533,13 +740,7 @@
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: {
-            backgroundColor: '#0B1120',
-            borderColor: 'rgba(16,185,129,.4)',
-            borderWidth: 1,
-            titleColor: '#F9FAFB',
-            bodyColor:  '#9CA3AF',
-          }
+          tooltip: tooltipOpts()
         },
         scales: {
           x: { ticks: { color: '#9CA3AF', maxRotation: 30 }, grid: { color: 'rgba(255,255,255,0.05)' } },
@@ -548,32 +749,120 @@
       };
     }
 
-    // =============================================
-    // TABELA RESUMO
-    // =============================================
-    function renderizarTabela(registros) {
-      const mapProc = agruparPor(registros, r => r.procedimento);
-      const linhas  = [...mapProc.entries()]
-        .map(([proc, rows]) => ({
-          proc,
-          qtd: rows.length,
-          mediaEspera: media(rows.map(r => r.diasEspera))
-        }))
-        .sort((a, b) => b.mediaEspera - a.mediaEspera);
+    function tooltipOpts() {
+      return {
+        backgroundColor: '#0B1120',
+        borderColor: 'rgba(16,185,129,.4)',
+        borderWidth: 1,
+        titleColor: '#F9FAFB',
+        bodyColor:  '#9CA3AF',
+      };
+    }
 
-      const tbody = document.getElementById('tabelaBody');
-      tbody.innerHTML = '';
+    // =============================================
+    // TABELA – toggle e pesquisa
+    // =============================================
+    function setModo(modo) {
+      modoTabela = modo;
+      document.getElementById('btnProcedimento').classList.toggle('active', modo === 'procedimento');
+      document.getElementById('btnPaciente').classList.toggle('active', modo === 'paciente');
+      document.getElementById('searchInput').value = '';
+      renderizarTabela();
+    }
 
-      linhas.forEach(l => {
-        const cls = l.mediaEspera > 90 ? 'badge-high' : l.mediaEspera > 60 ? 'badge-medium' : 'badge-low';
-        const tr  = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${l.proc}</td>
-          <td>${l.qtd}</td>
-          <td class="${cls}">${l.mediaEspera.toFixed(1)}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+    function filtrarTabela() {
+      renderizarTabela();
+    }
+
+    function renderizarTabela() {
+      const termo  = (document.getElementById('searchInput').value || '').toLowerCase();
+      const head   = document.getElementById('tableHead');
+      const tbody  = document.getElementById('tabelaBody');
+
+      if (modoTabela === 'procedimento') {
+        // ── Vista por procedimento ──
+        head.innerHTML = `<tr>
+          <th>Procedimento</th>
+          <th class="td-right">Qtde em Fila</th>
+          <th class="td-right">Tempo Médio de Espera (dias)</th>
+        </tr>`;
+
+        const mapProc = agruparPor(todosRegistros, r => r.procedimento);
+        let linhas = [...mapProc.entries()]
+          .map(([proc, rows]) => ({
+            proc,
+            qtd: rows.length,
+            mediaEspera: media(rows.map(r => r.diasEspera))
+          }))
+          .sort((a, b) => b.mediaEspera - a.mediaEspera);
+
+        if (termo) {
+          linhas = linhas.filter(l =>
+            l.proc.toLowerCase().includes(termo) ||
+            String(l.qtd).includes(termo) ||
+            l.mediaEspera.toFixed(1).includes(termo)
+          );
+        }
+
+        if (!linhas.length) {
+          tbody.innerHTML = '<tr class="empty-row"><td colspan="3">Nenhum resultado encontrado.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        linhas.forEach(l => {
+          const cls = l.mediaEspera > 90 ? 'badge-alto' : l.mediaEspera > 60 ? 'badge-medio' : l.mediaEspera > 30 ? 'badge-normal' : 'badge-baixo';
+          const tr  = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${l.proc}</td>
+            <td class="td-right">${l.qtd}</td>
+            <td class="td-right ${cls}">${l.mediaEspera.toFixed(1)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } else {
+        // ── Vista por paciente ──
+        head.innerHTML = `<tr>
+          <th>Paciente</th>
+          <th>Procedimento</th>
+          <th>Risco</th>
+          <th class="td-right">Idade</th>
+          <th class="td-right">Dias em Espera</th>
+        </tr>`;
+
+        let linhas = [...todosRegistros].sort((a, b) => a.paciente.localeCompare(b.paciente));
+
+        if (termo) {
+          linhas = linhas.filter(r =>
+            Object.values(r).some(v => String(v).toLowerCase().includes(termo))
+          );
+        }
+
+        if (!linhas.length) {
+          tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Nenhum resultado encontrado.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        linhas.forEach(r => {
+          const cor    = normalizarCor(r.corRisco);
+          const dotCls = cor ? `dot-${cor}` : 'dot-outro';
+          const info   = cor ? RISCO[cor] : null;
+          const riscoLabel = info ? info.label : (r.risco || '—');
+          const diasCls = r.diasEspera > 90 ? 'badge-alto' : r.diasEspera > 60 ? 'badge-medio' : r.diasEspera > 30 ? 'badge-normal' : 'badge-baixo';
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${r.paciente || '—'}</td>
+            <td>${truncar(r.procedimento, 45)}</td>
+            <td><span class="dot ${dotCls}"></span>${riscoLabel}</td>
+            <td class="td-right">${r.idadePaciente || '—'}</td>
+            <td class="td-right ${diasCls}">${r.diasEspera}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
     }
 
     // =============================================
@@ -584,3 +873,6 @@
 
 </body>
 </html>
+
+   
+  
