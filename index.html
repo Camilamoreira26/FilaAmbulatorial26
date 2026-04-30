@@ -1609,22 +1609,28 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
       const tip = { backgroundColor:'#0B1120', borderColor:'rgba(16,185,129,.4)', borderWidth:1, titleColor:'#F9FAFB', bodyColor:'#9CA3AF' };
 
       // ── Gráfico 1: Autorizações × Execuções por mês ──
-      // Agrupa autorizações pelo "Mês da Autorização"
+      // Autorizações agrupadas por "Mês da Autorização"
+      // Execuções agrupadas pelo mês da "Data da Execução" (independente do mês autorizado)
       const mesAutMap  = new Map();
       const mesExecMap = new Map();
 
       dados.forEach(d => {
-        const mes = normalizarMes(d.mesAutorizacao);
-        if (mes) {
-          mesAutMap.set(mes, (mesAutMap.get(mes) || 0) + 1);
-          if (d.dataExecucao && d.dataExecucao.trim() !== '') {
-            mesExecMap.set(mes, (mesExecMap.get(mes) || 0) + 1);
+        // Autorizações
+        const mesAut = normalizarMes(d.mesAutorizacao);
+        if (mesAut) mesAutMap.set(mesAut, (mesAutMap.get(mesAut) || 0) + 1);
+
+        // Execuções — usa o mês da Data da Execução
+        if (d.dataExecucao && d.dataExecucao.trim() !== '') {
+          const mesExec = d.dataExecucao.slice(0, 7); // "YYYY-MM"
+          if (/^\d{4}-\d{2}$/.test(mesExec)) {
+            mesExecMap.set(mesExec, (mesExecMap.get(mesExec) || 0) + 1);
           }
         }
       });
 
-      // Ordena meses cronologicamente
-      const mesesOrdenados = [...mesAutMap.keys()].sort(compararMeses);
+      // Une todos os meses e ordena cronologicamente
+      const todosMeses = new Set([...mesAutMap.keys(), ...mesExecMap.keys()]);
+      const mesesOrdenados = [...todosMeses].sort(compararMeses);
 
       chartAutMesInst = new Chart(document.getElementById('chartAutMes').getContext('2d'), {
         type: 'bar',
