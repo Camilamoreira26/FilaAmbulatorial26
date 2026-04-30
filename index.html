@@ -1,301 +1,1797 @@
-// ============================================================
-// CONFIGURAÇÕES – edite apenas esta seção
-// ============================================================
-const SPREADSHEET_ID   = '1kK5b3rfnipcoK8b7Lr3DvwCbG7dYgrhIqImyVLY_22E';
-const SHEET_NAME       = 'Base_Jan';
-const USERS_SHEET      = 'Usuarios';
-const AUTORIZADOS_SHEET = 'autorizados';  // aba de autorizações
-const COR_RISCO_HEADER = 'Cor Risco';
-const SECRET_KEY       = 'Maria&Clara';
-const TOKEN_EXPIRY_H   = 8;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Fila Ambulatorial – Emerald Night</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-// Cole aqui sua chave da API Claude (console.anthropic.com)
-const CLAUDE_API_KEY   = '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';
-const CLAUDE_MODEL     = 'claude-haiku-4-5-20251001'; // mais rápido e econômico disponível na conta
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-// ============================================================
-// ENTRY POINT GET – retorna dados (requer token)
-// action=fila (padrão) → dados da fila
-// action=autorizados   → dados das autorizações
-// ============================================================
-function doGet(e) {
-  const token  = (e.parameter && e.parameter.token)  || '';
-  const action = (e.parameter && e.parameter.action) || 'fila';
-
-  if (!validarToken(token)) {
-    return jsonOut({ status: 'unauthorized', message: 'Token inválido ou expirado.' });
-  }
-
-  try {
-    if (action === 'autorizados') {
-      return jsonOut({ status: 'ok', data: getAutorizadosData() });
-    }
-    return jsonOut({ status: 'ok', data: getFilaData() });
-  } catch (err) {
-    return jsonOut({ status: 'error', message: err.message });
-  }
-}
-
-// ============================================================
-// ENTRY POINT POST – login e análise IA
-// ============================================================
-function doPost(e) {
-  try {
-    const body = JSON.parse(e.postData.contents);
-
-    if (body.action === 'login') {
-      return handleLogin(body.usuario, body.senha);
+    :root {
+      --bg-page:        #050816;
+      --bg-card:        #0B1120;
+      --bg-card-alt:    #0d1526;
+      --emerald:        #10B981;
+      --emerald-dark:   #059669;
+      --emerald-glow:   rgba(16,185,129,.15);
+      --text-primary:   #F9FAFB;
+      --text-secondary: #9CA3AF;
+      --border:         rgba(16,185,129,.25);
+      --radius:         12px;
+      --shadow:         0 4px 24px rgba(0,0,0,.5);
+      --risco-vermelho: #EF4444;
+      --risco-amarelo:  #F59E0B;
+      --risco-verde:    #10B981;
+      --risco-azul:     #3B82F6;
     }
 
-    if (body.action === 'analise') {
-      // Valida token antes de chamar a IA
-      if (!validarToken(body.token || '')) {
-        return jsonOut({ status: 'unauthorized', message: 'Token inválido ou expirado.' });
+    body {
+      background: var(--bg-page);
+      color: var(--text-primary);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════
+       TELA DE LOGIN
+    ══════════════════════════════════ */
+    #loginScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 50% 40%, #0a2040 0%, #050816 70%);
+      padding: 24px;
+    }
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 48px 40px 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 8px 48px rgba(0,0,0,.7), 0 0 0 1px rgba(16,185,129,.1);
+      text-align: center;
+    }
+    .login-logo { max-width: 160px; max-height: 80px; object-fit: contain; margin: 0 auto 24px; display: block; }
+    .login-logo-placeholder {
+      width: 64px; height: 64px;
+      background: var(--emerald-glow); border: 2px solid var(--emerald);
+      border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px; font-size: 1.8rem;
+    }
+    .login-title    { font-size: 1.25rem; font-weight: 700; color: var(--emerald); margin-bottom: 4px; }
+    .login-subtitle { font-size: .82rem; color: var(--text-secondary); margin-bottom: 32px; }
+    .form-group { text-align: left; margin-bottom: 16px; }
+    .form-group label { display: block; font-size: .76rem; text-transform: uppercase; letter-spacing: .7px; color: var(--text-secondary); margin-bottom: 6px; }
+    .form-group input {
+      width: 100%; background: var(--bg-card-alt); border: 1px solid var(--border);
+      border-radius: 8px; padding: 11px 14px; font-size: .9rem; color: var(--text-primary);
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .form-group input:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(16,185,129,.15); }
+    .btn-login {
+      width: 100%; background: var(--emerald); color: #fff; border: none;
+      border-radius: 8px; padding: 12px; font-size: .95rem; font-weight: 700;
+      cursor: pointer; margin-top: 8px; transition: background .2s, transform .1s;
+    }
+    .btn-login:hover    { background: var(--emerald-dark); }
+    .btn-login:active   { transform: scale(.98); }
+    .btn-login:disabled { opacity: .5; cursor: not-allowed; }
+    #loginError {
+      margin-top: 14px; font-size: .82rem; color: #F87171;
+      background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
+      border-radius: 8px; padding: 10px 14px; display: none;
+    }
+
+    /* ══════════════════════════════════
+       DASHBOARD
+    ══════════════════════════════════ */
+    #dashboardScreen { display: none; }
+
+    header {
+      background: linear-gradient(135deg, #071a2e 0%, #0a2040 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .header-left  { display: flex; align-items: center; gap: 16px; }
+    .header-logo  { max-height: 40px; max-width: 120px; object-fit: contain; }
+    .header-logo-placeholder {
+      width: 38px; height: 38px;
+      background: var(--emerald-glow); border: 1px solid var(--emerald);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .header-text h1 { font-size: 1.15rem; font-weight: 700; color: var(--emerald); line-height: 1.2; }
+    .header-text p  { font-size: .78rem; color: var(--text-secondary); }
+    .header-right   { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+    .user-badge     { font-size: .8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+    .user-badge strong { color: var(--text-primary); }
+    .btn-logout {
+      background: transparent; border: 1px solid rgba(239,68,68,.4); color: #F87171;
+      border-radius: 7px; padding: 6px 14px; font-size: .78rem; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,.1); }
+
+    /* ── Abas de navegação ── */
+    .nav-tabs {
+      background: #070f20;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      padding: 0 32px;
+      gap: 4px;
+    }
+    .nav-tab {
+      padding: 12px 20px;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .2s, border-color .2s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .nav-tab:hover  { color: var(--text-primary); }
+    .nav-tab.active { color: var(--emerald); border-bottom-color: var(--emerald); }
+
+    /* ── Conteúdo das abas ── */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    main { max-width: 1400px; margin: 0 auto; padding: 28px 24px 48px; }
+
+    /* Controles */
+    .controls { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+    .btn-refresh {
+      background: var(--emerald); color: #fff; border: none; border-radius: 8px;
+      padding: 10px 22px; font-size: .9rem; font-weight: 600; cursor: pointer;
+      transition: background .2s, transform .1s;
+    }
+    .btn-refresh:hover    { background: var(--emerald-dark); }
+    .btn-refresh:active   { transform: scale(.97); }
+    .btn-refresh:disabled { opacity: .5; cursor: not-allowed; }
+    #status       { font-size: .82rem; color: var(--text-secondary); }
+    #status.error { color: #F87171; }
+
+    /* KPIs */
+    .kpi-section-title { font-size: .74rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 10px; }
+    .kpi-grid-geral {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 16px;
+    }
+    .kpi-grid-risco {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 32px;
+    }
+    .kpi-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 22px;
+      box-shadow: var(--shadow); position: relative; overflow: hidden;
+    }
+    .kpi-card.risco-vermelho { border-color: rgba(239,68,68,.4); }
+    .kpi-card.risco-amarelo  { border-color: rgba(245,158,11,.4); }
+    .kpi-card.risco-verde    { border-color: rgba(16,185,129,.4); }
+    .kpi-card.risco-azul     { border-color: rgba(59,130,246,.4); }
+    .kpi-card::before { content:''; position:absolute; inset:0; background:var(--emerald-glow); opacity:0; transition:opacity .3s; }
+    .kpi-card:hover::before { opacity: 1; }
+    .kpi-label { font-size:.75rem; text-transform:uppercase; letter-spacing:.7px; color:var(--text-secondary); margin-bottom:6px; }
+    .kpi-value { font-size: 2rem; font-weight: 700; color: var(--emerald); line-height: 1; }
+    .kpi-card.risco-vermelho .kpi-value { color: var(--risco-vermelho); }
+    .kpi-card.risco-amarelo  .kpi-value { color: var(--risco-amarelo); }
+    .kpi-card.risco-verde    .kpi-value { color: var(--risco-verde); }
+    .kpi-card.risco-azul     .kpi-value { color: var(--risco-azul); }
+    .kpi-unit { font-size:.78rem; color:var(--text-secondary); margin-top:4px; }
+    .kpi-pct  { display:inline-block; font-size:.72rem; font-weight:600; padding:2px 7px; border-radius:20px; margin-top:6px; }
+    .risco-vermelho .kpi-pct { background:rgba(239,68,68,.15);  color:var(--risco-vermelho); }
+    .risco-amarelo  .kpi-pct { background:rgba(245,158,11,.15); color:var(--risco-amarelo); }
+    .risco-verde    .kpi-pct { background:rgba(16,185,129,.15); color:var(--risco-verde); }
+    .risco-azul     .kpi-pct { background:rgba(59,130,246,.15); color:var(--risco-azul); }
+    .kpi-risco-label { font-size:.7rem; color:var(--text-secondary); margin-top:4px; line-height:1.3; }
+
+    /* Gráficos */
+    .charts-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; margin-bottom:32px; }
+    @media(max-width:900px){ .charts-grid{ grid-template-columns:1fr; } }
+    .chart-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); }
+    .chart-title { font-size:.9rem; font-weight:600; color:var(--text-primary); margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+    .chart-wrap  { position:relative; height:260px; }
+
+    /* Tabela */
+    .table-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); overflow-x:auto; }
+    .table-header-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+    .table-header-row h2 { font-size:.9rem; font-weight:600; color:var(--text-primary); }
+    .table-controls { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .toggle-group { display:flex; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+    .toggle-btn { padding:7px 14px; font-size:.78rem; font-weight:600; border:none; background:transparent; color:var(--text-secondary); cursor:pointer; transition:background .2s,color .2s; }
+    .toggle-btn.active { background:var(--emerald); color:#fff; }
+    .search-wrap { position:relative; display:flex; align-items:center; }
+    .search-wrap svg { position:absolute; left:10px; color:var(--text-secondary); pointer-events:none; }
+    #searchInput { background:var(--bg-card-alt); border:1px solid var(--border); border-radius:8px; padding:7px 12px 7px 34px; font-size:.82rem; color:var(--text-primary); width:240px; outline:none; transition:border-color .2s; }
+    #searchInput::placeholder { color:var(--text-secondary); }
+    #searchInput:focus        { border-color:var(--emerald); }
+    table { width:100%; border-collapse:collapse; font-size:.84rem; }
+    thead th { background:var(--bg-card-alt); color:var(--emerald); text-align:left; padding:10px 14px; font-weight:600; font-size:.76rem; text-transform:uppercase; letter-spacing:.6px; white-space:nowrap; }
+    tbody tr { border-bottom:1px solid rgba(255,255,255,.04); transition:background .15s; }
+    tbody tr:hover { background:rgba(16,185,129,.06); }
+    tbody td { padding:9px 14px; color:var(--text-primary); }
+    .td-right { text-align:right; font-variant-numeric:tabular-nums; }
+    .badge-alto   { color:var(--risco-vermelho); font-weight:600; }
+    .badge-medio  { color:var(--risco-amarelo); }
+    .badge-normal { color:var(--risco-verde); }
+    .badge-baixo  { color:var(--risco-azul); }
+    .dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+    .dot-vermelho { background:var(--risco-vermelho); }
+    .dot-amarelo  { background:var(--risco-amarelo); }
+    .dot-verde    { background:var(--risco-verde); }
+    .dot-azul     { background:var(--risco-azul); }
+    .dot-outro    { background:var(--text-secondary); }
+    .empty-row td { color:var(--text-secondary); text-align:center; padding:28px; }
+
+    /* ══════════════════════════════════
+       TELA DE ANÁLISE IA
+    ══════════════════════════════════ */
+
+    /* Painel de filtros */
+    .ia-filters {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+    .ia-filters-title {
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+    .ia-filters-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .ia-field { display: flex; flex-direction: column; gap: 6px; }
+    .ia-field label { font-size: .76rem; text-transform: uppercase; letter-spacing: .6px; color: var(--text-secondary); }
+    .ia-field input[type="date"] {
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: .88rem;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color .2s;
+      color-scheme: dark;
+    }
+    .ia-field input[type="date"]:focus { border-color: var(--emerald); }
+
+    .btn-ia {
+      background: linear-gradient(135deg, var(--emerald) 0%, #3B82F6 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-size: .9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity .2s, transform .1s;
+      white-space: nowrap;
+    }
+    .btn-ia:hover    { opacity: .9; }
+    .btn-ia:active   { transform: scale(.97); }
+    .btn-ia:disabled { opacity: .45; cursor: not-allowed; }
+
+    .btn-pdf {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background .2s, border-color .2s;
+      white-space: nowrap;
+    }
+    .btn-pdf:hover { background: rgba(255,255,255,.05); border-color: var(--emerald); }
+    .btn-pdf:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* Resumo do período selecionado */
+    .ia-periodo-info {
+      font-size: .82rem;
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      background: var(--emerald-glow);
+      border: 1px solid rgba(16,185,129,.2);
+      border-radius: 6px;
+      align-self: flex-end;
+    }
+    .ia-periodo-info strong { color: var(--emerald); }
+
+    /* Loading */
+    #iaLoading {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 64px;
+      color: var(--text-secondary);
+    }
+    .ia-spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(16,185,129,.2);
+      border-top-color: var(--emerald);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Resultado da análise */
+    #iaResultado { display: none; }
+
+    /* Cards de resultado */
+    .ia-result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .ia-result-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .ia-result-card.positivos { border-color: rgba(16,185,129,.4); }
+    .ia-result-card.atencao   { border-color: rgba(245,158,11,.4); }
+    .ia-result-card.criticos  { border-color: rgba(239,68,68,.4); }
+
+    .ia-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ia-card-icon { font-size: 1.3rem; }
+    .ia-card-title { font-size: .88rem; font-weight: 700; color: var(--text-primary); }
+    .ia-card-list  { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .ia-card-list li {
+      font-size: .83rem;
+      color: var(--text-secondary);
+      padding-left: 14px;
+      position: relative;
+      line-height: 1.4;
+    }
+    .ia-card-list li::before { content: '›'; position: absolute; left: 0; color: var(--emerald); font-weight: 700; }
+    .ia-result-card.atencao  .ia-card-list li::before { color: var(--risco-amarelo); }
+    .ia-result-card.criticos .ia-card-list li::before { color: var(--risco-vermelho); }
+
+    /* Card de resumo geral */
+    .ia-resumo-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    .ia-resumo-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .ia-resumo-header h3 { font-size: 1rem; font-weight: 700; color: var(--emerald); }
+    .ia-resumo-text { font-size: .88rem; color: var(--text-secondary); line-height: 1.7; }
+
+    /* Mini KPIs do período */
+    .ia-mini-kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .ia-mini-kpi {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+    .ia-mini-kpi .val { font-size: 1.6rem; font-weight: 700; color: var(--emerald); }
+    .ia-mini-kpi .lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .6px; color: var(--text-secondary); margin-top: 4px; }
+    .ia-mini-kpi .delta {
+      font-size: .72rem;
+      font-weight: 600;
+      margin-top: 4px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    .delta-melhora { background: rgba(16,185,129,.15); color: var(--emerald); }
+    .delta-piora   { background: rgba(239,68,68,.15);  color: var(--risco-vermelho); }
+    .delta-neutro  { background: rgba(156,163,175,.1); color: var(--text-secondary); }
+
+    /* Recomendações */
+    .ia-rec-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(59,130,246,.3);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .ia-rec-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .ia-rec-header h3 { font-size: .88rem; font-weight: 700; color: #3B82F6; }
+    .ia-rec-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .ia-rec-list li { display: flex; gap: 10px; align-items: flex-start; }
+    .ia-rec-num {
+      flex-shrink: 0;
+      width: 22px; height: 22px;
+      background: rgba(59,130,246,.2);
+      color: #3B82F6;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; font-weight: 700;
+    }
+    .ia-rec-list li span { font-size: .83rem; color: var(--text-secondary); line-height: 1.5; }
+
+    /* ══════════════════════════════════
+       LAYOUT PDF – tema claro profissional
+    ══════════════════════════════════ */
+    #iaParaPdf {
+      background: #ffffff;
+      color: #1f2937;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 0;
+      border-radius: 0;
+    }
+
+    /* Cabeçalho do documento PDF */
+    .pdf-header {
+      background: linear-gradient(135deg, #047857 0%, #065F46 100%);
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 0;
+    }
+    .pdf-header-logo {
+      height: 64px;
+      width: auto;
+      object-fit: contain;
+      flex-shrink: 0;
+      background: white;
+      border-radius: 8px;
+      padding: 6px;
+    }
+    .pdf-header-logo-placeholder {
+      height: 64px; width: 64px;
+      background: rgba(255,255,255,.2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; flex-shrink: 0;
+    }
+    .pdf-header-info { flex: 1; }
+    .pdf-header-info h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    .pdf-header-info h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: rgba(255,255,255,.85);
+      margin-bottom: 6px;
+    }
+    .pdf-header-info p {
+      font-size: .78rem;
+      color: rgba(255,255,255,.7);
+    }
+
+    /* Linha separadora vermelha (igual ao modelo) */
+    .pdf-divider {
+      height: 5px;
+      background: linear-gradient(90deg, #DC2626 0%, #F87171 100%);
+      margin-bottom: 24px;
+    }
+
+    /* Seções com cabeçalho verde */
+    .pdf-section {
+      margin: 0 24px 20px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+    }
+    .pdf-section-header {
+      background: linear-gradient(90deg, #047857 0%, #10B981 100%);
+      color: #ffffff;
+      font-size: .82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      padding: 9px 16px;
+    }
+    .pdf-section-body {
+      background: #ffffff;
+      padding: 16px;
+    }
+
+    /* Mini KPIs no PDF */
+    #iaParaPdf .ia-mini-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 0;
+    }
+    #iaParaPdf .ia-mini-kpi {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px 14px;
+      text-align: center;
+    }
+    #iaParaPdf .ia-mini-kpi .val {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #047857;
+    }
+    #iaParaPdf .ia-mini-kpi .lbl {
+      font-size: .68rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: #6b7280;
+      margin-top: 3px;
+    }
+    #iaParaPdf .delta-melhora { background: #d1fae5; color: #065F46; }
+    #iaParaPdf .delta-piora   { background: #fee2e2; color: #991b1b; }
+    #iaParaPdf .delta-neutro  { background: #f3f4f6; color: #6b7280; }
+
+    /* Resumo no PDF */
+    #iaParaPdf .ia-resumo-text {
+      font-size: .88rem;
+      color: #374151;
+      line-height: 1.7;
+    }
+
+    /* Cards análise no PDF */
+    #iaParaPdf .ia-result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 0;
+    }
+    #iaParaPdf .ia-result-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: none;
+    }
+    #iaParaPdf .ia-result-card.positivos { border-top: 3px solid #10B981; }
+    #iaParaPdf .ia-result-card.atencao   { border-top: 3px solid #F59E0B; }
+    #iaParaPdf .ia-result-card.criticos  { border-top: 3px solid #EF4444; }
+    #iaParaPdf .ia-card-header {
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+    }
+    #iaParaPdf .ia-card-title { color: #111827; font-size: .84rem; }
+    #iaParaPdf .ia-card-list li { color: #374151; font-size: .8rem; }
+    #iaParaPdf .ia-card-list li::before { color: #047857; }
+    #iaParaPdf .ia-result-card.atencao  .ia-card-list li::before { color: #D97706; }
+    #iaParaPdf .ia-result-card.criticos .ia-card-list li::before { color: #DC2626; }
+
+    /* Recomendações no PDF */
+    #iaParaPdf .ia-rec-card {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: none;
+    }
+    #iaParaPdf .ia-rec-header { border-bottom: 1px solid #bfdbfe; }
+    #iaParaPdf .ia-rec-header h3 { color: #1d4ed8; }
+    #iaParaPdf .ia-rec-num { background: #dbeafe; color: #1d4ed8; }
+    #iaParaPdf .ia-rec-list li span { color: #1e3a8a; }
+
+    /* Rodapé do PDF */
+    .pdf-footer {
+      margin: 20px 24px 24px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .pdf-footer span { font-size: .72rem; color: #9ca3af; }
+
+    @media print {
+      body { background: #fff !important; }
+      #loginScreen, header, .nav-tabs, .ia-filters, #iaLoading { display: none !important; }
+    }
+
+    /* ══════════════════════════════════
+       ABA AUTORIZADAS
+    ══════════════════════════════════ */
+    .aut-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .aut-kpi { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 22px; box-shadow:var(--shadow); }
+    .aut-kpi .kpi-label { font-size:.75rem; text-transform:uppercase; letter-spacing:.7px; color:var(--text-secondary); margin-bottom:6px; }
+    .aut-kpi .kpi-value { font-size:2rem; font-weight:700; color:var(--emerald); line-height:1; }
+    .aut-kpi .kpi-unit  { font-size:.78rem; color:var(--text-secondary); margin-top:4px; }
+    .aut-kpi.destaque   { border-color:rgba(59,130,246,.4); }
+    .aut-kpi.destaque .kpi-value { color:#3B82F6; }
+    .aut-kpi.alerta     { border-color:rgba(245,158,11,.4); }
+    .aut-kpi.alerta .kpi-value   { color:var(--risco-amarelo); }
+
+    .aut-charts-top {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .aut-charts-bottom {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    @media(max-width:900px){ .aut-charts-bottom{ grid-template-columns:1fr; } }
+
+    .aut-controls { display:flex; align-items:center; gap:16px; margin-bottom:28px; flex-wrap:wrap; }
+    #autStatus { font-size:.82rem; color:var(--text-secondary); }
+    #autStatus.error { color:#F87171; }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════
+       TELA DE LOGIN
+  ══════════════════════════════════ -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div id="loginLogoWrap"></div>
+      <div class="login-title">Fila Ambulatorial</div>
+      <div class="login-subtitle">Acesso restrito — insira suas credenciais</div>
+      <div class="form-group">
+        <label for="inputUsuario">Usuário</label>
+        <input type="text" id="inputUsuario" placeholder="seu.usuario" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="inputSenha">Senha</label>
+        <input type="password" id="inputSenha" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn-login" id="btnLogin" onclick="fazerLogin()">Entrar</button>
+      <div id="loginError"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       DASHBOARD
+  ══════════════════════════════════ -->
+  <div id="dashboardScreen">
+
+    <header>
+      <div class="header-left">
+        <div id="headerLogoWrap"></div>
+        <div class="header-text">
+          <h1>Painel de Fila Ambulatorial</h1>
+          <p>Análise de Espera e Procedimentos</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="user-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+          Olá, <strong id="nomeUsuario">—</strong>
+        </div>
+        <button class="btn-logout" onclick="fazerLogout()">Sair</button>
+      </div>
+    </header>
+
+    <!-- Abas -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" id="tabBtnDashboard" onclick="mudarAba('dashboard')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        Dashboard
+      </button>
+      <button class="nav-tab" id="tabBtnAutorizadas" onclick="mudarAba('autorizadas')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        Autorizada
+      </button>
+      <button class="nav-tab" id="tabBtnAnalise" onclick="mudarAba('analise')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+        </svg>
+        Análise das Informações
+      </button>
+    </nav>
+
+    <!-- ── ABA: DASHBOARD ── -->
+    <div class="tab-content active" id="tabDashboard">
+      <main>
+
+        <div class="controls">
+          <button class="btn-refresh" id="btnRefresh" onclick="carregarDados()">
+            ⟳ Atualizar dados
+          </button>
+          <span id="status">Aguardando dados…</span>
+        </div>
+
+        <div class="kpi-section-title">Visão Geral</div>
+        <div class="kpi-grid-geral">
+          <div class="kpi-card">
+            <div class="kpi-label">Tempo Médio de Espera</div>
+            <div class="kpi-value" id="kpiMedia">—</div>
+            <div class="kpi-unit">dias</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total de Solicitações</div>
+            <div class="kpi-value" id="kpiTotal">—</div>
+            <div class="kpi-unit">registros</div>
+          </div>
+        </div>
+
+        <div class="kpi-section-title">Distribuição por Risco</div>
+        <div class="kpi-grid-risco">
+          <div class="kpi-card risco-vermelho">
+            <div class="kpi-label"><span class="dot dot-vermelho"></span>Prioridade Zero – Emergência</div>
+            <div class="kpi-value" id="kpiVermelho">—</div>
+            <div class="kpi-unit">pacientes</div>
+            <span class="kpi-pct" id="pctVermelho">—%</span>
+            <div class="kpi-risco-label">Atendimento imediato</div>
+          </div>
+          <div class="kpi-card risco-amarelo">
+            <div class="kpi-label"><span class="dot dot-amarelo"></span>Prioridade 1 – Urgência</div>
+            <div class="kpi-value" id="kpiAmarelo">—</div>
+            <div class="kpi-unit">pacientes</div>
+            <span class="kpi-pct" id="pctAmarelo">—%</span>
+            <div class="kpi-risco-label">Atendimento o mais rápido possível</div>
+          </div>
+          <div class="kpi-card risco-verde">
+            <div class="kpi-label"><span class="dot dot-verde"></span>Prioridade 2 – Não urgente</div>
+            <div class="kpi-value" id="kpiVerde">—</div>
+            <div class="kpi-unit">pacientes</div>
+            <span class="kpi-pct" id="pctVerde">—%</span>
+            <div class="kpi-risco-label">Prioridade não urgente</div>
+          </div>
+          <div class="kpi-card risco-azul">
+            <div class="kpi-label"><span class="dot dot-azul"></span>Prioridade 3 – Eletivo</div>
+            <div class="kpi-value" id="kpiAzul">—</div>
+            <div class="kpi-unit">pacientes</div>
+            <span class="kpi-pct" id="pctAzul">—%</span>
+            <div class="kpi-risco-label">Atendimento eletivo</div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">Distribuição por Faixa de Dias em Espera</div>
+            <div class="chart-wrap"><canvas id="chartFaixas"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Pacientes por Nível de Risco</div>
+            <div class="chart-wrap"><canvas id="chartRisco"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Quantidade de Pacientes por Procedimento</div>
+            <div class="chart-wrap"><canvas id="chartQtdProc"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Faixa Etária por Grupo de Risco</div>
+            <div class="chart-wrap"><canvas id="chartEtarioRisco"></canvas></div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-header-row">
+            <h2>Resumo</h2>
+            <div class="table-controls">
+              <div class="toggle-group">
+                <button class="toggle-btn active" id="btnProcedimento" onclick="setModo('procedimento')">Por Procedimento</button>
+                <button class="toggle-btn"         id="btnPaciente"    onclick="setModo('paciente')">Por Paciente</button>
+              </div>
+              <div class="search-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Pesquisar…" oninput="renderizarTabela()" />
+              </div>
+            </div>
+          </div>
+          <table>
+            <thead id="tableHead"></thead>
+            <tbody id="tabelaBody">
+              <tr class="empty-row"><td colspan="5">Aguardando dados…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </main>
+    </div><!-- fim tabDashboard -->
+
+    <!-- ── ABA: AUTORIZADAS ── -->
+    <div class="tab-content" id="tabAutorizadas">
+      <main>
+
+        <div class="aut-controls">
+          <button class="btn-refresh" id="btnAtualizarAut" onclick="carregarAutorizados()">
+            ⟳ Atualizar dados
+          </button>
+          <span id="autStatus">Clique em Atualizar para carregar os dados.</span>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-section-title">Visão Geral – Autorizações</div>
+        <div class="aut-kpi-grid">
+          <div class="aut-kpi">
+            <div class="kpi-label">Total Autorizações</div>
+            <div class="kpi-value" id="autTotal">—</div>
+            <div class="kpi-unit">registros</div>
+          </div>
+          <div class="aut-kpi destaque">
+            <div class="kpi-label">Total Executados</div>
+            <div class="kpi-value" id="autExecutados">—</div>
+            <div class="kpi-unit">com data de execução</div>
+          </div>
+          <div class="aut-kpi">
+            <div class="kpi-label">Taxa de Execução</div>
+            <div class="kpi-value" id="autTaxa">—</div>
+            <div class="kpi-unit">% do total autorizado</div>
+          </div>
+          <div class="aut-kpi alerta">
+            <div class="kpi-label">Pendentes</div>
+            <div class="kpi-value" id="autPendentes">—</div>
+            <div class="kpi-unit">sem data de execução</div>
+          </div>
+        </div>
+
+        <!-- Gráfico: Autorizações vs Execuções por mês -->
+        <div class="aut-charts-top">
+          <div class="chart-card">
+            <div class="chart-title">Autorizações × Execuções por Mês</div>
+            <div class="chart-wrap" style="height:300px"><canvas id="chartAutMes"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Gráficos: Top procedimentos e Top unidades -->
+        <div class="aut-charts-bottom">
+          <div class="chart-card">
+            <div class="chart-title">Top Procedimentos Autorizados</div>
+            <div class="chart-wrap" style="height:320px"><canvas id="chartAutProc"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Top Unidades Executantes</div>
+            <div class="chart-wrap" style="height:320px"><canvas id="chartAutUnidades"></canvas></div>
+          </div>
+        </div>
+
+      </main>
+    </div><!-- fim tabAutorizadas -->
+
+    <!-- ── ABA: ANÁLISE IA ── -->
+    <div class="tab-content" id="tabAnalise">
+      <main>
+
+        <!-- Filtros e controles -->
+        <div class="ia-filters">
+          <div class="ia-filters-title">📅 Selecione o período para análise</div>
+          <div class="ia-filters-row">
+            <div class="ia-field">
+              <label>Data Inicial</label>
+              <input type="date" id="iaDataInicio" />
+            </div>
+            <div class="ia-field">
+              <label>Data Final</label>
+              <input type="date" id="iaDataFim" />
+            </div>
+            <div id="iaPeriodoInfo" class="ia-periodo-info" style="display:none"></div>
+            <button class="btn-ia" id="btnGerarAnalise" onclick="gerarAnalise()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+              </svg>
+              Gerar Análise
+            </button>
+            <button class="btn-pdf" id="btnPdf" onclick="exportarPdf()" disabled>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9,15 12,18 15,15"/>
+              </svg>
+              Exportar PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="iaLoading">
+          <div class="ia-spinner"></div>
+          <span>A IA está analisando os dados do período selecionado…</span>
+        </div>
+
+        <!-- Resultado -->
+        <div id="iaResultado">
+          <div id="iaParaPdf">
+
+            <!-- ── Cabeçalho do documento ── -->
+            <div class="pdf-header">
+              <div id="pdfLogoWrap"></div>
+              <div class="pdf-header-info">
+                <h1>Análise da Fila de Regulação</h1>
+                <h2>Prefeitura Municipal de Cuité</h2>
+                <p id="pdfPeriodoTexto">Período: — | Gerado em: —</p>
+              </div>
+            </div>
+            <div class="pdf-divider"></div>
+
+            <!-- ── Indicadores do período ── -->
+            <div class="pdf-section">
+              <div class="pdf-section-header">Indicadores do Período</div>
+              <div class="pdf-section-body">
+                <div class="ia-mini-kpis" id="iaMiniKpis"></div>
+              </div>
+            </div>
+
+            <!-- ── Resumo executivo ── -->
+            <div class="pdf-section">
+              <div class="pdf-section-header">Resumo Executivo</div>
+              <div class="pdf-section-body">
+                <p class="ia-resumo-text" id="iaTextoResumo"></p>
+              </div>
+            </div>
+
+            <!-- ── Análise de desempenho ── -->
+            <div class="pdf-section">
+              <div class="pdf-section-header">Análise de Desempenho</div>
+              <div class="pdf-section-body">
+                <div class="ia-result-grid">
+                  <div class="ia-result-card positivos">
+                    <div class="ia-card-header">
+                      <span class="ia-card-icon">✅</span>
+                      <span class="ia-card-title">Pontos Positivos</span>
+                    </div>
+                    <ul class="ia-card-list" id="iaListaPositivos"></ul>
+                  </div>
+                  <div class="ia-result-card atencao">
+                    <div class="ia-card-header">
+                      <span class="ia-card-icon">⚠️</span>
+                      <span class="ia-card-title">Pontos de Atenção</span>
+                    </div>
+                    <ul class="ia-card-list" id="iaListaAtencao"></ul>
+                  </div>
+                  <div class="ia-result-card criticos">
+                    <div class="ia-card-header">
+                      <span class="ia-card-icon">🚨</span>
+                      <span class="ia-card-title">Situação Crítica</span>
+                    </div>
+                    <ul class="ia-card-list" id="iaListaCriticos"></ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Recomendações ── -->
+            <div class="pdf-section">
+              <div class="pdf-section-header">Recomendações Prioritárias</div>
+              <div class="pdf-section-body">
+                <div class="ia-rec-card">
+                  <ol class="ia-rec-list" id="iaListaRecomendacoes"></ol>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Rodapé ── -->
+            <div class="pdf-footer">
+              <span>Prefeitura Municipal de Cuité – Fila de Regulação Ambulatorial</span>
+              <span id="pdfRodapeData"></span>
+            </div>
+
+          </div><!-- fim iaParaPdf -->
+        </div><!-- fim iaResultado -->
+
+      </main>
+    </div><!-- fim tabAnalise -->
+
+  </div><!-- fim dashboardScreen -->
+
+  <script>
+    // =============================================
+    // ⚙️ CONFIGURAÇÃO
+    // =============================================
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdPueLojUJrUVamHFbd2Zi_qdfhPLhCRYVR4oSkk-fXW09U6m9qASsrfAMeVl9y_-K5Q/exec';
+    const LOGO_URL        = 'img/logo.png';
+
+    // A chave da API Claude fica no Code.gs (backend seguro)
+    // Não é necessário configurar nada aqui para a IA
+
+    // ── Sessão ──
+    const TOKEN_KEY = 'fila_token';
+    const NOME_KEY  = 'fila_nome';
+
+    // ── Estado global ──
+    let todosRegistros = [];
+    let modoTabela     = 'procedimento';
+    let analiseGerada  = false;
+
+    // ── Gráficos ──
+    let chartFaixasInst = null, chartRiscoInst = null,
+        chartQtdProcInst = null, chartEtarioRiscoInst = null;
+
+    const RISCO = {
+      vermelho: { label: 'Prioridade Zero – Emergência', cor: '#EF4444', bg: 'rgba(239,68,68,.7)' },
+      amarelo:  { label: 'Prioridade 1 – Urgência',      cor: '#F59E0B', bg: 'rgba(245,158,11,.7)' },
+      verde:    { label: 'Prioridade 2 – Não urgente',   cor: '#10B981', bg: 'rgba(16,185,129,.7)' },
+      azul:     { label: 'Prioridade 3 – Eletivo',       cor: '#3B82F6', bg: 'rgba(59,130,246,.7)' },
+    };
+    const RISCO_ORDEM = ['vermelho', 'amarelo', 'verde', 'azul'];
+
+    // =============================================
+    // INICIALIZAÇÃO
+    // =============================================
+    window.onload = function () {
+      renderizarLogos();
+      preencherDatasDefault();
+
+      const token = sessionStorage.getItem(TOKEN_KEY);
+      const nome  = sessionStorage.getItem(NOME_KEY);
+
+      if (token) { mostrarDashboard(nome); carregarDados(); }
+      else        { mostrarLogin(); }
+
+      document.getElementById('inputSenha').addEventListener('keydown',   e => { if (e.key === 'Enter') fazerLogin(); });
+      document.getElementById('inputUsuario').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inputSenha').focus(); });
+    };
+
+    function preencherDatasDefault() {
+      const hoje = new Date();
+      const tresM = new Date(hoje); tresM.setMonth(tresM.getMonth() - 3);
+      document.getElementById('iaDataFim').value    = hoje.toISOString().split('T')[0];
+      document.getElementById('iaDataInicio').value = tresM.toISOString().split('T')[0];
+    }
+
+    function renderizarLogos() {
+      const loginWrap  = document.getElementById('loginLogoWrap');
+      const headerWrap = document.getElementById('headerLogoWrap');
+      const pdfWrap    = document.getElementById('pdfLogoWrap');
+      if (LOGO_URL) {
+        loginWrap.innerHTML  = `<img src="${LOGO_URL}" class="login-logo" alt="Logo" />`;
+        headerWrap.innerHTML = `<img src="${LOGO_URL}" class="header-logo" alt="Logo" />`;
+        if (pdfWrap) pdfWrap.innerHTML = `<img src="${LOGO_URL}" class="pdf-header-logo" alt="Logo" />`;
+      } else {
+        loginWrap.innerHTML  = `<div class="login-logo-placeholder">🏥</div>`;
+        headerWrap.innerHTML = `<div class="header-logo-placeholder">🏥</div>`;
+        if (pdfWrap) pdfWrap.innerHTML = `<div class="pdf-header-logo-placeholder">🏥</div>`;
       }
-      return handleAnalise(body.stats, body.periodo);
     }
 
-    return jsonOut({ status: 'error', message: 'Ação não reconhecida.' });
-  } catch (err) {
-    return jsonOut({ status: 'error', message: err.message });
-  }
-}
+    function mostrarLogin()     { document.getElementById('loginScreen').style.display='flex'; document.getElementById('dashboardScreen').style.display='none'; setTimeout(()=>document.getElementById('inputUsuario').focus(),100); }
+    function mostrarDashboard(n){ document.getElementById('loginScreen').style.display='none'; document.getElementById('dashboardScreen').style.display='block'; document.getElementById('nomeUsuario').textContent=n||'Usuário'; }
 
-// ============================================================
-// ANÁLISE COM CLAUDE (chamada server-side)
-// ============================================================
-function handleAnalise(stats, periodo) {
-  if (!stats) {
-    return jsonOut({ status: 'error', message: 'Dados de análise não fornecidos.' });
-  }
+    // ── Navegação entre abas ──
+    function mudarAba(aba) {
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('tabBtn' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
+      document.getElementById('tab'   + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
+    }
 
-  try {
-    const prompt   = montarPromptAnalise(stats, periodo);
-    const resposta = chamarClaude(prompt);
-    return jsonOut({ status: 'ok', analise: resposta });
-  } catch (err) {
-    return jsonOut({ status: 'error', message: err.message });
-  }
-}
+    // =============================================
+    // LOGIN / LOGOUT
+    // =============================================
+    async function fazerLogin() {
+      const usuario = document.getElementById('inputUsuario').value.trim();
+      const senha   = document.getElementById('inputSenha').value.trim();
+      const btn     = document.getElementById('btnLogin');
+      const errEl   = document.getElementById('loginError');
+      errEl.style.display = 'none';
 
-function montarPromptAnalise(stats, periodo) {
-  const deltaMedia = (stats.mediaEspera - stats.mediaGeralEspera).toFixed(1);
-  const sinal      = deltaMedia > 0 ? '+' : '';
+      if (!usuario || !senha) { mostrarErroLogin('Preencha o usuário e a senha.'); return; }
 
-  // Trunca nomes de procedimentos para reduzir tamanho do payload
-  const topProcTexto = (stats.topProc || []).slice(0, 3)
-    .map((p, i) => `${i+1}. ${String(p.p).slice(0, 40)}: ${Number(p.m).toFixed(1)}d (${p.q}pac)`)
-    .join('; ');
+      btn.disabled = true; btn.textContent = 'Verificando…';
+      try {
+        const res  = await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({action:'login', usuario, senha}) });
+        const json = await res.json();
+        if (json.status === 'ok') {
+          sessionStorage.setItem(TOKEN_KEY, json.token);
+          sessionStorage.setItem(NOME_KEY,  json.nome);
+          mostrarDashboard(json.nome); carregarDados();
+        } else { mostrarErroLogin(json.message || 'Acesso negado.'); }
+      } catch(err) { mostrarErroLogin('Erro de conexão.'); }
+      finally { btn.disabled = false; btn.textContent = 'Entrar'; }
+    }
 
-  const prompt =
-    'Especialista em filas ambulatoriais. Retorne SOMENTE JSON puro sem markdown.\n' +
-    'PERIODO: ' + periodo.inicio + ' a ' + periodo.fim + '\n' +
-    'total=' + stats.total + ' media=' + stats.mediaEspera.toFixed(1) + 'd' +
-    ' (geral=' + stats.mediaGeralEspera.toFixed(1) + 'd delta=' + sinal + deltaMedia + 'd)' +
-    ' mediana=' + stats.medianaEspera.toFixed(1) + 'd max=' + stats.maxEspera + 'd' +
-    ' >90dias=' + stats.acima90 + '(' + stats.pctAcima90.toFixed(1) + '%)' +
-    ' verm=' + stats.cont.vermelho + ' amar=' + stats.cont.amarelo +
-    ' verd=' + stats.cont.verde + ' azul=' + stats.cont.azul +
-    ' topProc=[' + topProcTexto + ']' +
-    ' totalGeral=' + stats.totalGeral +
-    ' mediaGeral=' + stats.mediaGeralEspera.toFixed(1) + 'd' +
-    ' vermGeral=' + stats.contGeral.vermelho + ' amarGeral=' + stats.contGeral.amarelo + '\n' +
-    'JSON: {"resumo":"3 linhas sobre o periodo, o que melhorou e piorou",' +
-    '"positivos":["p1","p2","p3"],' +
-    '"atencao":["a1","a2","a3"],' +
-    '"criticos":["c1","c2"],' +
-    '"recomendacoes":["r1","r2","r3","r4"]}';
+    function mostrarErroLogin(msg) { const el=document.getElementById('loginError'); el.textContent=msg; el.style.display='block'; }
 
-  return prompt;
-}
+    function fazerLogout() {
+      sessionStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(NOME_KEY);
+      document.getElementById('inputSenha').value = '';
+      mostrarLogin();
+    }
 
-function chamarClaude(prompt) {
-  const url = 'https://api.anthropic.com/v1/messages';
+    // =============================================
+    // BUSCA DE DADOS
+    // =============================================
+    async function carregarDados() {
+      const token = sessionStorage.getItem(TOKEN_KEY);
+      if (!token) { fazerLogout(); return; }
 
-  const payload = {
-    model: CLAUDE_MODEL,
-    max_tokens: 1024,
-    messages: [{ role: 'user', content: prompt }]
-  };
+      const btn = document.getElementById('btnRefresh');
+      btn.disabled = true; setStatus('Carregando dados…', false);
 
-  const options = {
-    method: 'post',
-    headers: {
-      'x-api-key':         CLAUDE_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'content-type':      'application/json'
-    },
-    payload:           JSON.stringify(payload),
-    muteHttpExceptions: true
-  };
+      try {
+        const res  = await fetch(`${APPS_SCRIPT_URL}?token=${encodeURIComponent(token)}`);
+        if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+        const json = await res.json();
+        if (json.status === 'unauthorized') { fazerLogout(); return; }
+        if (json.status === 'error') throw new Error(json.message);
+        onDataLoaded(json.data);
+      } catch(err) { setStatus('Erro: ' + (err.message || err), true); }
+      finally { btn.disabled = false; }
+    }
 
-  const response = UrlFetchApp.fetch(url, options);
-  const code     = response.getResponseCode();
-  const json     = JSON.parse(response.getContentText());
+    function onDataLoaded(dados) {
+      if (!dados || !dados.length) { setStatus('Nenhum dado encontrado.', true); return; }
+      setStatus('Atualizado em: ' + new Date().toLocaleString('pt-BR'), false);
+      todosRegistros = dados.map(d => ({...d, diasEspera: Number(d.diasEspera)})).filter(d => !isNaN(d.diasEspera));
+      renderizarKPIs(todosRegistros);
+      renderizarGraficos(todosRegistros);
+      renderizarTabela();
+    }
 
-  if (code !== 200) {
-    // Loga o erro completo para facilitar diagnóstico
-    Logger.log('Erro Claude API - Code: ' + code + ' Body: ' + response.getContentText());
-    const msg = json?.error?.message
-      ? `[HTTP ${code}] ${json.error.type || ''}: ${json.error.message}`
-      : `Erro HTTP ${code} na API Claude.`;
-    throw new Error(msg);
-  }
+    function setStatus(msg, isError) { const el=document.getElementById('status'); el.textContent=msg; el.className=isError?'error':''; }
 
-  const texto = json.content?.[0]?.text || '';
+    // =============================================
+    // UTILITÁRIOS
+    // =============================================
+    function idadeParaAnos(str) {
+      if (!str) return null;
+      const s = str.toLowerCase(), num = parseFloat(s);
+      if (isNaN(num)) return null;
+      return (s.includes('mes') || s.includes('mês')) ? num / 12 : num;
+    }
+    function grupoEtario(anos) {
+      if (anos === null) return 'Desconhecido';
+      return anos < 18 ? 'Pediátrico (<18)' : anos < 60 ? 'Adulto (18–59)' : 'Idoso (60+)';
+    }
+    function faixaDias(d) { return d<=30?'0–30':d<=60?'31–60':d<=90?'61–90':'>90'; }
+    function media(arr)   { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+    function mediana(arr) {
+      if (!arr.length) return 0;
+      const s = [...arr].sort((a,b)=>a-b), m = Math.floor(s.length/2);
+      return s.length%2 ? s[m] : (s[m-1]+s[m])/2;
+    }
+    function agruparPor(regs, fn) {
+      const map = new Map();
+      regs.forEach(r => { const k=fn(r); if(!map.has(k))map.set(k,[]); map.get(k).push(r); });
+      return map;
+    }
+    function truncar(str, n) { return str&&str.length>n ? str.slice(0,n)+'…' : (str||''); }
+    function normalizarCor(cor) {
+      const c=(cor||'').toLowerCase();
+      if(c.includes('verm')) return 'vermelho';
+      if(c.includes('amar')) return 'amarelo';
+      if(c.includes('verd')) return 'verde';
+      if(c.includes('azul')) return 'azul';
+      return null;
+    }
+    function fmtData(str) {
+      if (!str) return '—';
+      const [y,m,d] = str.split('-');
+      return `${d}/${m}/${y}`;
+    }
 
-  // Remove possíveis blocos de código do retorno
-  const limpo = texto.replace(/```json|```/g, '').trim();
+    // =============================================
+    // KPIs
+    // =============================================
+    function renderizarKPIs(regs) {
+      const total = regs.length;
+      document.getElementById('kpiMedia').textContent = media(regs.map(r=>r.diasEspera)).toFixed(1);
+      document.getElementById('kpiTotal').textContent = total;
+      const cont = {vermelho:0,amarelo:0,verde:0,azul:0};
+      regs.forEach(r => { const c=normalizarCor(r.corRisco); if(c) cont[c]++; });
+      RISCO_ORDEM.forEach(cor => {
+        const qtd=cont[cor], pct=total>0?((qtd/total)*100).toFixed(1):'0.0';
+        const id=cor.charAt(0).toUpperCase()+cor.slice(1);
+        document.getElementById('kpi'+id).textContent=qtd;
+        document.getElementById('pct'+id).textContent=pct+'%';
+      });
+    }
 
-  try {
-    return JSON.parse(limpo);
-  } catch (e) {
-    throw new Error('Claude retornou formato inesperado. Tente novamente.');
-  }
-}
+    // =============================================
+    // GRÁFICOS
+    // =============================================
+    function renderizarGraficos(regs) {
+      Chart.defaults.color='#9CA3AF'; Chart.defaults.borderColor='rgba(255,255,255,0.06)';
+      Chart.defaults.font.family="'Segoe UI',system-ui,sans-serif"; Chart.defaults.font.size=12;
 
-// ============================================================
-// LOGIN
-// ============================================================
-function handleLogin(usuario, senha) {
-  if (!usuario || !senha) {
-    return jsonOut({ status: 'error', message: 'Usuário e senha são obrigatórios.' });
-  }
+      if(chartFaixasInst)     {chartFaixasInst.destroy();     chartFaixasInst=null;}
+      if(chartRiscoInst)      {chartRiscoInst.destroy();      chartRiscoInst=null;}
+      if(chartQtdProcInst)    {chartQtdProcInst.destroy();    chartQtdProcInst=null;}
+      if(chartEtarioRiscoInst){chartEtarioRiscoInst.destroy();chartEtarioRiscoInst=null;}
 
-  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(USERS_SHEET);
+      const tip={backgroundColor:'#0B1120',borderColor:'rgba(16,185,129,.4)',borderWidth:1,titleColor:'#F9FAFB',bodyColor:'#9CA3AF'};
 
-  if (!sheet) {
-    return jsonOut({ status: 'error', message: `Aba "${USERS_SHEET}" não encontrada.` });
-  }
+      // Gráfico 1
+      const fo=['0–30','31–60','61–90','>90'], cf=Object.fromEntries(fo.map(f=>[f,0]));
+      regs.forEach(r=>{cf[faixaDias(r.diasEspera)]++;});
+      chartFaixasInst = new Chart(document.getElementById('chartFaixas').getContext('2d'),{
+        type:'bar', data:{labels:fo,datasets:[{label:'Pacientes',data:fo.map(f=>cf[f]),backgroundColor:['#10B981','#059669','#047857','#065F46'],borderRadius:6,borderSkipped:false}]},
+        options:barOpts(tip)
+      });
 
-  const values  = sheet.getDataRange().getValues();
-  const headers = values[0];
-  const col     = {};
-  headers.forEach((h, i) => { col[String(h).trim()] = i; });
+      // Gráfico 2
+      const cr={vermelho:0,amarelo:0,verde:0,azul:0};
+      regs.forEach(r=>{const c=normalizarCor(r.corRisco);if(c)cr[c]++;});
+      chartRiscoInst = new Chart(document.getElementById('chartRisco').getContext('2d'),{
+        type:'doughnut',
+        data:{labels:RISCO_ORDEM.map(c=>RISCO[c].label),datasets:[{data:RISCO_ORDEM.map(c=>cr[c]),backgroundColor:RISCO_ORDEM.map(c=>RISCO[c].bg),borderColor:RISCO_ORDEM.map(c=>RISCO[c].cor),borderWidth:2,hoverOffset:6}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#9CA3AF',boxWidth:12,padding:14,font:{size:11}}},tooltip:tip}}
+      });
 
-  const userRow = values.slice(1).find(row =>
-    String(row[col['Usuario']] || '').trim().toLowerCase() === usuario.trim().toLowerCase() &&
-    String(row[col['Senha']]   || '').trim() === senha.trim() &&
-    String(row[col['Ativo']]   || '').trim().toUpperCase() === 'S'
-  );
+      // Gráfico 3
+      const mp=[...agruparPor(regs,r=>r.procedimento).entries()].map(([p,r])=>({p,q:r.length})).sort((a,b)=>b.q-a.q);
+      const CORES=['#10B981','#059669','#3B82F6','#6366F1','#F59E0B','#EC4899','#14B8A6','#8B5CF6','#F97316','#22D3EE'];
+      chartQtdProcInst = new Chart(document.getElementById('chartQtdProc').getContext('2d'),{
+        type:'bar',
+        data:{labels:mp.map(d=>truncar(d.p,38)),datasets:[{label:'Pacientes',data:mp.map(d=>d.q),backgroundColor:CORES.slice(0,mp.length).map(c=>c+'CC'),borderColor:CORES.slice(0,mp.length),borderWidth:1,borderRadius:4,borderSkipped:false}]},
+        options:{...barOpts(tip),indexAxis:'y'}
+      });
 
-  if (!userRow) {
-    return jsonOut({ status: 'error', message: 'Usuário ou senha incorretos.' });
-  }
+      // Gráfico 4
+      const ge=['Pediátrico (<18)','Adulto (18–59)','Idoso (60+)'];
+      const mat={}; ge.forEach(g=>{mat[g]={vermelho:0,amarelo:0,verde:0,azul:0};});
+      regs.forEach(r=>{const g=grupoEtario(idadeParaAnos(r.idadePaciente)),c=normalizarCor(r.corRisco);if(ge.includes(g)&&c)mat[g][c]++;});
+      chartEtarioRiscoInst = new Chart(document.getElementById('chartEtarioRisco').getContext('2d'),{
+        type:'bar',
+        data:{labels:ge,datasets:RISCO_ORDEM.map(cor=>({label:RISCO[cor].label,data:ge.map(g=>mat[g][cor]),backgroundColor:RISCO[cor].bg,borderColor:RISCO[cor].cor,borderWidth:1,borderRadius:4,borderSkipped:false}))},
+        options:{...barOpts(tip),plugins:{legend:{display:true,position:'top',labels:{color:'#9CA3AF',boxWidth:11,padding:12,font:{size:10}}},tooltip:tip}}
+      });
+    }
 
-  const nome  = String(userRow[col['Nome']] || usuario);
-  const token = gerarToken(usuario, nome);
-  return jsonOut({ status: 'ok', token, nome });
-}
+    function barOpts(tip){
+      return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:tip},
+        scales:{x:{ticks:{color:'#9CA3AF',maxRotation:30},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#9CA3AF'},grid:{color:'rgba(255,255,255,0.05)'}}}};
+    }
 
-// ============================================================
-// TOKEN
-// ============================================================
-function gerarToken(usuario, nome) {
-  const expiry  = new Date().getTime() + TOKEN_EXPIRY_H * 3600 * 1000;
-  const payload = usuario + '|' + nome + '|' + expiry;
-  const sig     = assinar(payload);
-  return Utilities.base64EncodeWebSafe(payload) + '.' + sig;
-}
+    // =============================================
+    // TABELA
+    // =============================================
+    function setModo(modo) {
+      modoTabela=modo;
+      document.getElementById('btnProcedimento').classList.toggle('active',modo==='procedimento');
+      document.getElementById('btnPaciente').classList.toggle('active',modo==='paciente');
+      document.getElementById('searchInput').value='';
+      renderizarTabela();
+    }
 
-function validarToken(token) {
-  if (!token) return false;
-  try {
-    const parts   = token.split('.');
-    if (parts.length !== 2) return false;
-    const payload = Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString();
-    const expiry  = parseInt(payload.split('|')[2]);
-    if (isNaN(expiry) || new Date().getTime() > expiry) return false;
-    return assinar(payload) === parts[1];
-  } catch (e) {
-    return false;
-  }
-}
+    function renderizarTabela() {
+      const termo=(document.getElementById('searchInput').value||'').toLowerCase();
+      const head=document.getElementById('tableHead'), tbody=document.getElementById('tabelaBody');
 
-function assinar(payload) {
-  const raw = Utilities.computeHmacSha256Signature(payload, SECRET_KEY);
-  return raw.map(b => ('0' + (b & 0xFF).toString(16)).slice(-2)).join('');
-}
+      if(modoTabela==='procedimento'){
+        head.innerHTML=`<tr><th>Procedimento</th><th class="td-right">Qtde em Fila</th><th class="td-right">Tempo Médio de Espera (dias)</th></tr>`;
+        let linhas=[...agruparPor(todosRegistros,r=>r.procedimento).entries()]
+          .map(([p,rows])=>({p,q:rows.length,m:media(rows.map(r=>r.diasEspera))}))
+          .sort((a,b)=>b.m-a.m);
+        if(termo)linhas=linhas.filter(l=>l.p.toLowerCase().includes(termo)||String(l.q).includes(termo)||l.m.toFixed(1).includes(termo));
+        if(!linhas.length){tbody.innerHTML='<tr class="empty-row"><td colspan="3">Nenhum resultado.</td></tr>';return;}
+        tbody.innerHTML='';
+        linhas.forEach(l=>{
+          const cls=l.m>90?'badge-alto':l.m>60?'badge-medio':l.m>30?'badge-normal':'badge-baixo';
+          const tr=document.createElement('tr');
+          tr.innerHTML=`<td>${l.p}</td><td class="td-right">${l.q}</td><td class="td-right ${cls}">${l.m.toFixed(1)}</td>`;
+          tbody.appendChild(tr);
+        });
+      } else {
+        head.innerHTML=`<tr><th>Paciente</th><th>Procedimento</th><th>Risco</th><th class="td-right">Idade</th><th class="td-right">Dias em Espera</th></tr>`;
+        let linhas=[...todosRegistros].sort((a,b)=>a.paciente.localeCompare(b.paciente));
+        if(termo)linhas=linhas.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(termo)));
+        if(!linhas.length){tbody.innerHTML='<tr class="empty-row"><td colspan="5">Nenhum resultado.</td></tr>';return;}
+        tbody.innerHTML='';
+        linhas.forEach(r=>{
+          const cor=normalizarCor(r.corRisco),dot=cor?`dot-${cor}`:'dot-outro',label=cor?RISCO[cor].label:(r.risco||'—');
+          const dCls=r.diasEspera>90?'badge-alto':r.diasEspera>60?'badge-medio':r.diasEspera>30?'badge-normal':'badge-baixo';
+          const tr=document.createElement('tr');
+          tr.innerHTML=`<td>${r.paciente||'—'}</td><td>${truncar(r.procedimento,45)}</td><td><span class="dot ${dot}"></span>${label}</td><td class="td-right">${r.idadePaciente||'—'}</td><td class="td-right ${dCls}">${r.diasEspera}</td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    }
 
-// ============================================================
-// DADOS DE AUTORIZADOS
-// ============================================================
-function getAutorizadosData() {
-  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(AUTORIZADOS_SHEET);
+    // =============================================
+    // ANÁLISE COM IA (GEMINI)
+    // =============================================
+    async function gerarAnalise() {
+      if (!todosRegistros.length) { alert('Carregue os dados primeiro.'); return; }
 
-  if (!sheet) throw new Error(`Aba "${AUTORIZADOS_SHEET}" não encontrada.`);
+      const dataInicio = document.getElementById('iaDataInicio').value;
+      const dataFim    = document.getElementById('iaDataFim').value;
 
-  const values = sheet.getDataRange().getValues();
-  if (values.length <= 1) return [];
+      if (!dataInicio || !dataFim) { alert('Selecione o período de análise.'); return; }
+      if (dataInicio > dataFim)    { alert('A data inicial deve ser anterior à data final.'); return; }
 
-  const headers = values[0];
-  const col     = {};
-  headers.forEach((h, i) => { col[String(h).trim()] = i; });
+      // Filtra registros pelo intervalo
+      const periodo = todosRegistros.filter(r => r.dataSolicitacao >= dataInicio && r.dataSolicitacao <= dataFim);
 
-  return values.slice(1).map(row => {
-    const rawExec = row[col['Data da Execução']];
-    const dataExecucao = rawExec instanceof Date && !isNaN(rawExec.getTime())
-      ? Utilities.formatDate(rawExec, Session.getScriptTimeZone(), 'yyyy-MM-dd')
-      : (rawExec ? String(rawExec).trim() : '');
+      if (!periodo.length) { alert('Nenhum registro encontrado no período selecionado.'); return; }
 
-    const mesAutorizacao = String(row[col['Mês da Autorização']] ?? '').trim();
+      // Atualiza info do período
+      const infoEl = document.getElementById('iaPeriodoInfo');
+      infoEl.style.display = 'block';
+      infoEl.innerHTML = `<strong>${periodo.length}</strong> registros de <strong>${fmtData(dataInicio)}</strong> a <strong>${fmtData(dataFim)}</strong>`;
 
-    return {
-      codSolicitacao:   String(row[col['Código Solicitação']] ?? '').trim(),
-      usuario:          String(row[col['Usuário']]            ?? '').trim(),
-      procedimento:     String(row[col['Procedimento']]       ?? '').trim(),
-      unidadeExecutante:String(row[col['Unidade Executante']] ?? '').trim(),
-      dataExecucao,
-      mesAutorizacao,
-    };
-  }).filter(d => d.codSolicitacao !== '' || d.usuario !== '');
-}
+      document.getElementById('btnGerarAnalise').disabled = true;
+      document.getElementById('iaLoading').style.display  = 'flex';
+      document.getElementById('iaResultado').style.display = 'none';
+      document.getElementById('btnPdf').disabled = true;
 
-// ============================================================
-// DADOS DA FILA
-// ============================================================
-function getFilaData() {
-  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_NAME);
+      try {
+        // Monta estatísticas do período e da base geral
+        const stats      = calcularStats(periodo);
+        const statsGeral = calcularStats(todosRegistros);
 
-  if (!sheet) throw new Error(`Aba "${SHEET_NAME}" não encontrada.`);
+        // Exibe mini KPIs comparativos
+        renderizarMiniKpis(stats, statsGeral);
 
-  const values = sheet.getDataRange().getValues();
-  if (values.length <= 1) return [];
+        // Objeto completo enviado ao Apps Script
+        const statsEnvio = {
+          ...stats,
+          totalGeral:       statsGeral.total,
+          mediaGeralEspera: statsGeral.mediaEspera,
+          contGeral:        statsGeral.cont,
+        };
 
-  const headers = values[0];
-  const col     = {};
-  headers.forEach((h, i) => { col[String(h).trim()] = i; });
+        // Chama o Apps Script → Claude API
+        const resposta = await chamarIA(statsEnvio, { inicio: fmtData(dataInicio), fim: fmtData(dataFim) });
 
-  const corIdx = (COR_RISCO_HEADER in col) ? col[COR_RISCO_HEADER] : 8;
+        // Renderiza resultado
+        renderizarAnalise(resposta);
 
-  return values.slice(1).map(row => {
-    const rawData = row[col['Data da Solicitação']];
-    const dataSolicitacao = rawData instanceof Date
-      ? Utilities.formatDate(rawData, Session.getScriptTimeZone(), 'yyyy-MM-dd')
-      : String(rawData);
+        analiseGerada = true;
+        document.getElementById('btnPdf').disabled = false;
 
-    return {
-      codSolicitacao:  String(row[col['Cód. Solicitação']] ?? ''),
-      dataSolicitacao,
-      risco:           String(row[col['Risco']]            ?? ''),
-      corRisco:        String(row[corIdx]                  ?? '').toLowerCase().trim(),
-      paciente:        String(row[col['Paciente']]         ?? ''),
-      idadePaciente:   String(row[col['Idade Paciente']]   ?? ''),
-      procedimento:    String(row[col['Procedimento']]     ?? ''),
-      cid:             String(row[col['CID']]              ?? ''),
-      diasEspera:      Number(row[col['Dias em Espera']]   ?? 0),
-    };
-  }).filter(d => d.codSolicitacao !== '');
-}
+      } catch(err) {
+        alert('Erro ao gerar análise: ' + err.message);
+      } finally {
+        document.getElementById('btnGerarAnalise').disabled = false;
+        document.getElementById('iaLoading').style.display  = 'none';
+      }
+    }
 
-// ============================================================
-// HELPER
-// ============================================================
-function jsonOut(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+    function calcularStats(regs) {
+      const total = regs.length;
+      const dias  = regs.map(r => r.diasEspera);
+      const cont  = {vermelho:0,amarelo:0,verde:0,azul:0};
+      regs.forEach(r => { const c=normalizarCor(r.corRisco); if(c) cont[c]++; });
+
+      const mapProc = agruparPor(regs, r => r.procedimento);
+      const topProc = [...mapProc.entries()]
+        .map(([p,rows]) => ({p, m: media(rows.map(r=>r.diasEspera)), q: rows.length}))
+        .sort((a,b) => b.m - a.m).slice(0,5);
+
+      const acima90 = dias.filter(d => d > 90).length;
+
+      return { total, mediaEspera: media(dias), medianaEspera: mediana(dias), maxEspera: dias.length ? Math.max(...dias) : 0,
+               cont, topProc, acima90, pctAcima90: total > 0 ? (acima90/total*100) : 0 };
+    }
+
+    function montarPrompt(stats, statsGeral, dataInicio, dataFim) {
+      const deltaMedia = (stats.mediaEspera - statsGeral.mediaEspera).toFixed(1);
+      const sinal = deltaMedia > 0 ? '+' : '';
+
+      return `Você é um especialista em gestão de saúde e filas ambulatoriais. Analise os dados abaixo e retorne EXATAMENTE um JSON válido, sem markdown, sem texto adicional, apenas o JSON puro.
+
+DADOS DO PERÍODO (${fmtData(dataInicio)} a ${fmtData(dataFim)}):
+- Total de registros: ${stats.total}
+- Tempo médio de espera: ${stats.mediaEspera.toFixed(1)} dias (geral: ${statsGeral.mediaEspera.toFixed(1)} dias, variação: ${sinal}${deltaMedia} dias)
+- Mediana de espera: ${stats.medianaEspera.toFixed(1)} dias
+- Máximo de espera: ${stats.maxEspera} dias
+- Pacientes aguardando >90 dias: ${stats.acima90} (${stats.pctAcima90.toFixed(1)}%)
+- Emergência (vermelho): ${stats.cont.vermelho} pacientes
+- Urgência (amarelo): ${stats.cont.amarelo} pacientes
+- Não urgente (verde): ${stats.cont.verde} pacientes
+- Eletivo (azul): ${stats.cont.azul} pacientes
+- Top procedimentos por tempo médio de espera:
+${stats.topProc.map((p,i)=>`  ${i+1}. ${p.p}: ${p.m.toFixed(1)} dias (${p.q} pacientes)`).join('\n')}
+
+COMPARATIVO COM BASE GERAL (todos os registros):
+- Total geral: ${statsGeral.total}
+- Média geral: ${statsGeral.mediaEspera.toFixed(1)} dias
+- Emergência geral: ${statsGeral.cont.vermelho} | Urgência geral: ${statsGeral.cont.amarelo}
+
+Retorne APENAS este JSON (sem blocos de código, sem marcação):
+{
+  "resumo": "parágrafo de 3 a 5 linhas com análise geral do período",
+  "positivos": ["ponto positivo 1", "ponto positivo 2", "ponto positivo 3"],
+  "atencao": ["ponto de atenção 1", "ponto de atenção 2", "ponto de atenção 3"],
+  "criticos": ["situação crítica 1", "situação crítica 2"],
+  "recomendacoes": ["recomendação 1", "recomendação 2", "recomendação 3", "recomendação 4"]
+}`;
+    }
+
+    // Chama o Apps Script que por sua vez chama a API Claude (server-side)
+    async function chamarIA(stats, periodo) {
+      const token = sessionStorage.getItem(TOKEN_KEY);
+
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'analise', token, stats, periodo })
+      });
+
+      if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+
+      const json = await res.json();
+
+      if (json.status === 'unauthorized') { fazerLogout(); throw new Error('Sessão expirada.'); }
+      if (json.status === 'error')        throw new Error(json.message);
+
+      return json.analise;
+    }
+
+    function renderizarMiniKpis(stats, statsGeral) {
+      const deltaMedia = stats.mediaEspera - statsGeral.mediaEspera;
+      const deltaPct90 = stats.pctAcima90   - statsGeral.pctAcima90;
+
+      function deltaBadge(val, inverter=false) {
+        if (Math.abs(val) < 0.5) return `<span class="delta delta-neutro">= estável</span>`;
+        const melhora = inverter ? val > 0 : val < 0;
+        const cls   = melhora ? 'delta-melhora' : 'delta-piora';
+        const icon  = melhora ? '▼' : '▲';
+        return `<span class="delta ${cls}">${icon} ${Math.abs(val).toFixed(1)}</span>`;
+      }
+
+      document.getElementById('iaMiniKpis').innerHTML = `
+        <div class="ia-mini-kpi">
+          <div class="val">${stats.total}</div>
+          <div class="lbl">Registros no período</div>
+        </div>
+        <div class="ia-mini-kpi">
+          <div class="val">${stats.mediaEspera.toFixed(1)}</div>
+          <div class="lbl">Média de espera (dias)</div>
+          ${deltaBadge(deltaMedia)}
+        </div>
+        <div class="ia-mini-kpi">
+          <div class="val">${stats.maxEspera}</div>
+          <div class="lbl">Máximo de espera (dias)</div>
+        </div>
+        <div class="ia-mini-kpi">
+          <div class="val">${stats.acima90}</div>
+          <div class="lbl">Aguardando >90 dias</div>
+          ${deltaBadge(deltaPct90)}
+        </div>
+        <div class="ia-mini-kpi">
+          <div class="val" style="color:var(--risco-vermelho)">${stats.cont.vermelho}</div>
+          <div class="lbl">Emergências</div>
+        </div>
+        <div class="ia-mini-kpi">
+          <div class="val" style="color:var(--risco-amarelo)">${stats.cont.amarelo}</div>
+          <div class="lbl">Urgências</div>
+        </div>
+      `;
+    }
+
+    function renderizarAnalise(dados) {
+      document.getElementById('iaTextoResumo').textContent = dados.resumo || '—';
+
+      const renderLista = (id, items) => {
+        const el = document.getElementById(id);
+        el.innerHTML = '';
+        (items||[]).forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          el.appendChild(li);
+        });
+      };
+
+      renderLista('iaListaPositivos', dados.positivos);
+      renderLista('iaListaAtencao',   dados.atencao);
+      renderLista('iaListaCriticos',  dados.criticos);
+
+      const recEl = document.getElementById('iaListaRecomendacoes');
+      recEl.innerHTML = '';
+      (dados.recomendacoes||[]).forEach((rec, i) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="ia-rec-num">${i+1}</span><span>${rec}</span>`;
+        recEl.appendChild(li);
+      });
+
+      document.getElementById('iaResultado').style.display = 'block';
+
+      // Atualiza textos do cabeçalho e rodapé do PDF
+      const dataIni = document.getElementById('iaDataInicio').value;
+      const dataFim = document.getElementById('iaDataFim').value;
+      const agora   = new Date().toLocaleString('pt-BR');
+      const periEl  = document.getElementById('pdfPeriodoTexto');
+      const rodEl   = document.getElementById('pdfRodapeData');
+      if (periEl) periEl.textContent = `Período: ${fmtData(dataIni)} a ${fmtData(dataFim)}  |  Gerado em: ${agora}`;
+      if (rodEl)  rodEl.textContent  = `Documento gerado em ${agora}`;
+
+      // Logo no PDF (garante que foi renderizada)
+      const pdfWrap = document.getElementById('pdfLogoWrap');
+      if (pdfWrap && !pdfWrap.innerHTML.trim()) {
+        pdfWrap.innerHTML = LOGO_URL
+          ? `<img src="${LOGO_URL}" class="pdf-header-logo" alt="Logo" />`
+          : `<div class="pdf-header-logo-placeholder">🏥</div>`;
+      }
+    }
+
+    // =============================================
+    // ABA AUTORIZADAS
+    // =============================================
+    let autRegistros = [];
+    let chartAutMesInst = null, chartAutProcInst = null, chartAutUnidadesInst = null;
+
+    async function carregarAutorizados() {
+      const token = sessionStorage.getItem(TOKEN_KEY);
+      if (!token) { fazerLogout(); return; }
+
+      const btn = document.getElementById('btnAtualizarAut');
+      btn.disabled = true;
+      setAutStatus('Carregando dados…', false);
+
+      try {
+        const res  = await fetch(`${APPS_SCRIPT_URL}?token=${encodeURIComponent(token)}&action=autorizados`);
+        if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+        const json = await res.json();
+        if (json.status === 'unauthorized') { fazerLogout(); return; }
+        if (json.status === 'error') throw new Error(json.message);
+        onAutorizadosLoaded(json.data);
+      } catch(err) { setAutStatus('Erro: ' + (err.message || err), true); }
+      finally { btn.disabled = false; }
+    }
+
+    function setAutStatus(msg, isError) {
+      const el = document.getElementById('autStatus');
+      el.textContent = msg;
+      el.className = isError ? 'error' : '';
+    }
+
+    function onAutorizadosLoaded(dados) {
+      if (!dados || !dados.length) { setAutStatus('Nenhum dado encontrado na aba autorizados.', true); return; }
+      autRegistros = dados;
+      setAutStatus('Atualizado em: ' + new Date().toLocaleString('pt-BR'), false);
+      renderizarAutKPIs(dados);
+      renderizarAutGraficos(dados);
+    }
+
+    function renderizarAutKPIs(dados) {
+      const total      = dados.length;
+      const executados = dados.filter(d => d.dataExecucao && d.dataExecucao.trim() !== '').length;
+      const pendentes  = total - executados;
+      const taxa       = total > 0 ? ((executados / total) * 100).toFixed(1) : '0.0';
+
+      document.getElementById('autTotal').textContent      = total;
+      document.getElementById('autExecutados').textContent = executados;
+      document.getElementById('autPendentes').textContent  = pendentes;
+      document.getElementById('autTaxa').textContent       = taxa + '%';
+    }
+
+    function renderizarAutGraficos(dados) {
+      // Destroy existentes
+      if (chartAutMesInst)      { chartAutMesInst.destroy();      chartAutMesInst = null; }
+      if (chartAutProcInst)     { chartAutProcInst.destroy();     chartAutProcInst = null; }
+      if (chartAutUnidadesInst) { chartAutUnidadesInst.destroy(); chartAutUnidadesInst = null; }
+
+      const tip = { backgroundColor:'#0B1120', borderColor:'rgba(16,185,129,.4)', borderWidth:1, titleColor:'#F9FAFB', bodyColor:'#9CA3AF' };
+
+      // ── Gráfico 1: Autorizações × Execuções por mês ──
+      // Agrupa autorizações pelo "Mês da Autorização"
+      const mesAutMap  = new Map();
+      const mesExecMap = new Map();
+
+      dados.forEach(d => {
+        const mes = normalizarMes(d.mesAutorizacao);
+        if (mes) {
+          mesAutMap.set(mes, (mesAutMap.get(mes) || 0) + 1);
+          if (d.dataExecucao && d.dataExecucao.trim() !== '') {
+            mesExecMap.set(mes, (mesExecMap.get(mes) || 0) + 1);
+          }
+        }
+      });
+
+      // Ordena meses cronologicamente
+      const mesesOrdenados = [...mesAutMap.keys()].sort(compararMeses);
+
+      chartAutMesInst = new Chart(document.getElementById('chartAutMes').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: mesesOrdenados.map(m => formatarMesLabel(m)),
+          datasets: [
+            {
+              label: 'Autorizações',
+              data: mesesOrdenados.map(m => mesAutMap.get(m) || 0),
+              backgroundColor: 'rgba(16,185,129,.7)',
+              borderColor: '#10B981',
+              borderWidth: 1,
+              borderRadius: 4,
+              borderSkipped: false
+            },
+            {
+              label: 'Execuções',
+              data: mesesOrdenados.map(m => mesExecMap.get(m) || 0),
+              backgroundColor: 'rgba(59,130,246,.7)',
+              borderColor: '#3B82F6',
+              borderWidth: 1,
+              borderRadius: 4,
+              borderSkipped: false
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top', labels: { color:'#9CA3AF', boxWidth:12, padding:14, font:{size:11} } },
+            tooltip: tip
+          },
+          scales: {
+            x: { ticks:{color:'#9CA3AF'}, grid:{color:'rgba(255,255,255,0.05)'} },
+            y: { ticks:{color:'#9CA3AF'}, grid:{color:'rgba(255,255,255,0.05)'}, beginAtZero:true }
+          }
+        }
+      });
+
+      // ── Gráfico 2: Top procedimentos ──
+      const procMap = new Map();
+      dados.forEach(d => {
+        const p = d.procedimento || 'Não informado';
+        procMap.set(p, (procMap.get(p) || 0) + 1);
+      });
+      const topProc = [...procMap.entries()].sort((a,b) => b[1]-a[1]).slice(0, 10);
+      const CORES = ['#10B981','#059669','#3B82F6','#6366F1','#F59E0B','#EC4899','#14B8A6','#8B5CF6','#F97316','#22D3EE'];
+
+      chartAutProcInst = new Chart(document.getElementById('chartAutProc').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: topProc.map(([p]) => truncar(p, 38)),
+          datasets: [{
+            label: 'Autorizações',
+            data: topProc.map(([,q]) => q),
+            backgroundColor: CORES.slice(0, topProc.length).map(c => c + 'CC'),
+            borderColor: CORES.slice(0, topProc.length),
+            borderWidth: 1, borderRadius: 4, borderSkipped: false
+          }]
+        },
+        options: {
+          ...barOpts(tip),
+          indexAxis: 'y',
+          plugins: { legend:{display:false}, tooltip:tip }
+        }
+      });
+
+      // ── Gráfico 3: Top unidades executantes ──
+      const unidMap = new Map();
+      dados.forEach(d => {
+        const u = d.unidadeExecutante || 'Não informada';
+        unidMap.set(u, (unidMap.get(u) || 0) + 1);
+      });
+      const topUnid = [...unidMap.entries()].sort((a,b) => b[1]-a[1]).slice(0, 10);
+
+      chartAutUnidadesInst = new Chart(document.getElementById('chartAutUnidades').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: topUnid.map(([u]) => truncar(u, 38)),
+          datasets: [{
+            label: 'Procedimentos',
+            data: topUnid.map(([,q]) => q),
+            backgroundColor: CORES.slice(0, topUnid.length).map((c,i) => (CORES[CORES.length-1-i] || CORES[i]) + 'CC'),
+            borderColor: CORES.slice(0, topUnid.length).map((c,i) => CORES[CORES.length-1-i] || CORES[i]),
+            borderWidth: 1, borderRadius: 4, borderSkipped: false
+          }]
+        },
+        options: {
+          ...barOpts(tip),
+          indexAxis: 'y',
+          plugins: { legend:{display:false}, tooltip:tip }
+        }
+      });
+    }
+
+    // Normaliza o campo "Mês da Autorização" para chave "YYYY-MM"
+    // Aceita: "Janeiro/2024", "01/2024", "2024-01", "jan/24" etc.
+    function normalizarMes(str) {
+      if (!str) return null;
+      const s = str.trim();
+
+      // Tenta formato "YYYY-MM"
+      if (/^\d{4}-\d{2}$/.test(s)) return s;
+
+      // Tenta formato "MM/YYYY"
+      const mmYYYY = s.match(/^(\d{1,2})\/(\d{4})$/);
+      if (mmYYYY) return `${mmYYYY[2]}-${mmYYYY[1].padStart(2,'0')}`;
+
+      // Tenta "NomeMes/YYYY" ou "NomeMes YYYY"
+      const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+      const nomeMes = s.match(/([a-záàãâéêíóôõúç]+)[\/\s\-](\d{2,4})/i);
+      if (nomeMes) {
+        const idx = meses.findIndex(m => m.startsWith(nomeMes[1].toLowerCase().slice(0,3)));
+        if (idx >= 0) {
+          let ano = nomeMes[2];
+          if (ano.length === 2) ano = '20' + ano;
+          return `${ano}-${String(idx+1).padStart(2,'0')}`;
+        }
+      }
+
+      // Tenta somente nome de mês (sem ano — assume ano corrente)
+      const soloMes = meses.findIndex(m => m.toLowerCase() === s.toLowerCase());
+      if (soloMes >= 0) return `${new Date().getFullYear()}-${String(soloMes+1).padStart(2,'0')}`;
+
+      return null;
+    }
+
+    function compararMeses(a, b) { return a.localeCompare(b); }
+
+    function formatarMesLabel(yyyymm) {
+      const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const [y, m] = yyyymm.split('-');
+      return `${meses[parseInt(m,10)-1]}/${y}`;
+    }
+
+    // =============================================
+    // EXPORTAR PDF
+    // =============================================
+    function exportarPdf() {
+      const el      = document.getElementById('iaParaPdf');
+      const dataIni = document.getElementById('iaDataInicio').value;
+      const dataFim = document.getElementById('iaDataFim').value;
+      const btnPdf  = document.getElementById('btnPdf');
+
+      const opt = {
+        margin:      [0, 0, 0, 0],
+        filename:    `analise-fila-${dataIni}-a-${dataFim}.pdf`,
+        image:       { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false },
+        jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:   { mode: ['css', 'legacy'], avoid: '.pdf-section' }
+      };
+
+      btnPdf.disabled = true;
+      btnPdf.textContent = 'Gerando…';
+
+      html2pdf().set(opt).from(el).save().then(() => {
+        btnPdf.disabled = false;
+        btnPdf.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/>
+          <line x1="12" y1="18" x2="12" y2="12"/>
+          <polyline points="9,15 12,18 15,15"/>
+        </svg> Exportar PDF`;
+      });
+    }
+
+  </script>
+</body>
+</html>
