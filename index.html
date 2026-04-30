@@ -666,9 +666,68 @@
     }
     @media(max-width:900px){ .aut-charts-bottom{ grid-template-columns:1fr; } }
 
-    .aut-controls { display:flex; align-items:center; gap:16px; margin-bottom:28px; flex-wrap:wrap; }
+    .aut-controls { display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
     #autStatus { font-size:.82rem; color:var(--text-secondary); }
     #autStatus.error { color:#F87171; }
+
+    /* Filtros da aba autorizadas */
+    .aut-filters {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 22px;
+      margin-bottom: 24px; display: flex; align-items: flex-end;
+      gap: 16px; flex-wrap: wrap; box-shadow: var(--shadow);
+    }
+    .aut-filters .ia-field label { font-size:.76rem; text-transform:uppercase; letter-spacing:.6px; color:var(--text-secondary); }
+    .aut-filters .ia-field input[type="date"] {
+      background: var(--bg-card-alt); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 14px; font-size:.88rem;
+      color: var(--text-primary); outline: none; color-scheme: dark;
+      transition: border-color .2s;
+    }
+    .aut-filters .ia-field input[type="date"]:focus { border-color: var(--emerald); }
+    .btn-filtrar-aut {
+      background: var(--emerald); color:#fff; border:none; border-radius:8px;
+      padding:10px 20px; font-size:.88rem; font-weight:700; cursor:pointer;
+      transition: background .2s;
+    }
+    .btn-filtrar-aut:hover { background: var(--emerald-dark); }
+    .btn-limpar-aut {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-secondary); border-radius:8px; padding:10px 16px;
+      font-size:.85rem; cursor:pointer; transition: background .2s;
+    }
+    .btn-limpar-aut:hover { background: rgba(255,255,255,.05); }
+
+    /* Tabela de usuários */
+    .aut-user-table { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); overflow-x:auto; margin-bottom: 32px; }
+    .aut-user-table h2 { font-size:.9rem; font-weight:600; color:var(--text-primary); margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+    .aut-user-row { border-bottom:1px solid rgba(255,255,255,.04); }
+    .aut-user-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 14px; cursor:pointer; transition: background .15s;
+      border-radius: 6px;
+    }
+    .aut-user-header:hover { background: rgba(16,185,129,.06); }
+    .aut-user-name { font-size:.88rem; color:var(--text-primary); font-weight:500; }
+    .aut-user-count {
+      background: var(--emerald-glow); color: var(--emerald);
+      border: 1px solid rgba(16,185,129,.3); border-radius:20px;
+      padding:2px 10px; font-size:.76rem; font-weight:700;
+      display:flex; align-items:center; gap:8px;
+    }
+    .aut-chevron { transition: transform .2s; font-size:.8rem; color:var(--text-secondary); }
+    .aut-chevron.open { transform: rotate(180deg); }
+    .aut-proc-list {
+      display:none; padding: 0 14px 12px 28px;
+    }
+    .aut-proc-list.open { display:block; }
+    .aut-proc-item {
+      font-size:.82rem; color:var(--text-secondary); padding:5px 0;
+      border-bottom:1px solid rgba(255,255,255,.03);
+      display:flex; justify-content:space-between; gap:16px;
+    }
+    .aut-proc-item:last-child { border-bottom:none; }
+    .aut-proc-item .proc-data { color: var(--text-secondary); font-size:.76rem; white-space:nowrap; }
   </style>
 </head>
 <body>
@@ -855,6 +914,21 @@
           <span id="autStatus">Clique em Atualizar para carregar os dados.</span>
         </div>
 
+        <!-- Filtros de data -->
+        <div class="aut-filters">
+          <div class="ia-field">
+            <label>Data de Execução — Início</label>
+            <input type="date" id="autDataInicio" />
+          </div>
+          <div class="ia-field">
+            <label>Data de Execução — Fim</label>
+            <input type="date" id="autDataFim" />
+          </div>
+          <button class="btn-filtrar-aut" onclick="aplicarFiltroAut()">Filtrar</button>
+          <button class="btn-limpar-aut" onclick="limparFiltroAut()">Limpar filtro</button>
+          <span id="autFiltroInfo" style="font-size:.8rem;color:var(--text-secondary);align-self:center;"></span>
+        </div>
+
         <!-- KPIs -->
         <div class="kpi-section-title">Visão Geral – Autorizações</div>
         <div class="aut-kpi-grid">
@@ -886,6 +960,12 @@
             <div class="chart-title">Autorizações × Execuções por Mês</div>
             <div class="chart-wrap" style="height:300px"><canvas id="chartAutMes"></canvas></div>
           </div>
+        </div>
+
+        <!-- Tabela de usuários -->
+        <div class="aut-user-table">
+          <h2>👤 Usuários — Procedimentos Executados <span style="font-size:.78rem;color:var(--text-secondary);font-weight:400">(clique para expandir)</span></h2>
+          <div id="autUserList"></div>
         </div>
 
         <!-- Gráficos: Top procedimentos e Top unidades -->
@@ -1553,6 +1633,7 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
     // ABA AUTORIZADAS
     // =============================================
     let autRegistros = [];
+    let autFiltrados = [];
     let chartAutMesInst = null, chartAutProcInst = null, chartAutUnidadesInst = null;
 
     async function carregarAutorizados() {
@@ -1583,16 +1664,48 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
     function onAutorizadosLoaded(dados) {
       if (!dados || !dados.length) { setAutStatus('Nenhum dado encontrado na aba autorizados.', true); return; }
       autRegistros = dados;
+      autFiltrados = dados;
       setAutStatus('Atualizado em: ' + new Date().toLocaleString('pt-BR'), false);
+      document.getElementById('autFiltroInfo').textContent = '';
+      renderizarAut(autFiltrados);
+    }
+
+    function aplicarFiltroAut() {
+      const ini = document.getElementById('autDataInicio').value;
+      const fim = document.getElementById('autDataFim').value;
+      if (!ini && !fim) { limparFiltroAut(); return; }
+
+      autFiltrados = autRegistros.filter(d => {
+        if (!d.dataExecucao) return false;
+        if (ini && d.dataExecucao < ini) return false;
+        if (fim && d.dataExecucao > fim) return false;
+        return true;
+      });
+
+      const infoEl = document.getElementById('autFiltroInfo');
+      infoEl.textContent = `Exibindo ${autFiltrados.length} execuções de ${ini ? fmtData(ini) : '—'} a ${fim ? fmtData(fim) : '—'}`;
+      renderizarAut(autFiltrados);
+    }
+
+    function limparFiltroAut() {
+      document.getElementById('autDataInicio').value = '';
+      document.getElementById('autDataFim').value = '';
+      document.getElementById('autFiltroInfo').textContent = '';
+      autFiltrados = autRegistros;
+      renderizarAut(autFiltrados);
+    }
+
+    function renderizarAut(dados) {
       renderizarAutKPIs(dados);
       renderizarAutGraficos(dados);
+      renderizarAutUsuarios(dados);
     }
 
     function renderizarAutKPIs(dados) {
-      const total      = dados.length;
+      const total      = autRegistros.length; // total sempre da base completa
       const executados = dados.filter(d => d.dataExecucao && d.dataExecucao.trim() !== '').length;
-      const pendentes  = total - executados;
-      const taxa       = total > 0 ? ((executados / total) * 100).toFixed(1) : '0.0';
+      const pendentes  = autRegistros.filter(d => !d.dataExecucao || d.dataExecucao.trim() === '').length;
+      const taxa       = total > 0 ? ((autRegistros.filter(d => d.dataExecucao && d.dataExecucao.trim()).length / total) * 100).toFixed(1) : '0.0';
 
       document.getElementById('autTotal').textContent      = total;
       document.getElementById('autExecutados').textContent = executados;
@@ -1601,164 +1714,140 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
     }
 
     function renderizarAutGraficos(dados) {
-      // Destroy existentes
       if (chartAutMesInst)      { chartAutMesInst.destroy();      chartAutMesInst = null; }
       if (chartAutProcInst)     { chartAutProcInst.destroy();     chartAutProcInst = null; }
       if (chartAutUnidadesInst) { chartAutUnidadesInst.destroy(); chartAutUnidadesInst = null; }
 
       const tip = { backgroundColor:'#0B1120', borderColor:'rgba(16,185,129,.4)', borderWidth:1, titleColor:'#F9FAFB', bodyColor:'#9CA3AF' };
+      const CORES = ['#10B981','#059669','#3B82F6','#6366F1','#F59E0B','#EC4899','#14B8A6','#8B5CF6','#F97316','#22D3EE'];
 
-      // ── Gráfico 1: Autorizações × Execuções por mês ──
-      // Autorizações agrupadas por "Mês da Autorização"
-      // Execuções agrupadas pelo mês da "Data da Execução" (independente do mês autorizado)
-      const mesAutMap  = new Map();
-      const mesExecMap = new Map();
+      // ── Gráfico 1: Autorizações por mês (base completa) × Execuções por mês (filtrado) ──
+      const mesAutMap  = new Map(); // da base completa
+      const mesExecMap = new Map(); // do filtro atual
 
+      // Autorizações: agrupa pelo "Mês da Autorização" — usa a base completa
+      autRegistros.forEach(d => {
+        const mes = normalizarMes(d.mesAutorizacao);
+        if (mes) mesAutMap.set(mes, (mesAutMap.get(mes) || 0) + 1);
+      });
+
+      // Execuções: agrupa pelo mês da "Data da Execução" — usa os dados filtrados
       dados.forEach(d => {
-        // Autorizações
-        const mesAut = normalizarMes(d.mesAutorizacao);
-        if (mesAut) mesAutMap.set(mesAut, (mesAutMap.get(mesAut) || 0) + 1);
-
-        // Execuções — usa o mês da Data da Execução
-        if (d.dataExecucao && d.dataExecucao.trim() !== '') {
-          const mesExec = d.dataExecucao.slice(0, 7); // "YYYY-MM"
-          if (/^\d{4}-\d{2}$/.test(mesExec)) {
-            mesExecMap.set(mesExec, (mesExecMap.get(mesExec) || 0) + 1);
-          }
+        if (d.dataExecucao && /^\d{4}-\d{2}-\d{2}$/.test(d.dataExecucao)) {
+          const mes = d.dataExecucao.slice(0, 7);
+          mesExecMap.set(mes, (mesExecMap.get(mes) || 0) + 1);
         }
       });
 
-      // Une todos os meses e ordena cronologicamente
       const todosMeses = new Set([...mesAutMap.keys(), ...mesExecMap.keys()]);
-      const mesesOrdenados = [...todosMeses].sort(compararMeses);
+      const mesesOrdenados = [...todosMeses].sort((a,b) => a.localeCompare(b));
 
       chartAutMesInst = new Chart(document.getElementById('chartAutMes').getContext('2d'), {
         type: 'bar',
         data: {
-          labels: mesesOrdenados.map(m => formatarMesLabel(m)),
+          labels: mesesOrdenados.map(formatarMesLabel),
           datasets: [
-            {
-              label: 'Autorizações',
-              data: mesesOrdenados.map(m => mesAutMap.get(m) || 0),
-              backgroundColor: 'rgba(16,185,129,.7)',
-              borderColor: '#10B981',
-              borderWidth: 1,
-              borderRadius: 4,
-              borderSkipped: false
-            },
-            {
-              label: 'Execuções',
-              data: mesesOrdenados.map(m => mesExecMap.get(m) || 0),
-              backgroundColor: 'rgba(59,130,246,.7)',
-              borderColor: '#3B82F6',
-              borderWidth: 1,
-              borderRadius: 4,
-              borderSkipped: false
-            }
+            { label:'Autorizações', data: mesesOrdenados.map(m => mesAutMap.get(m) || 0),
+              backgroundColor:'rgba(16,185,129,.7)', borderColor:'#10B981', borderWidth:1, borderRadius:4, borderSkipped:false },
+            { label:'Execuções',    data: mesesOrdenados.map(m => mesExecMap.get(m) || 0),
+              backgroundColor:'rgba(59,130,246,.7)', borderColor:'#3B82F6', borderWidth:1, borderRadius:4, borderSkipped:false }
           ]
         },
         options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true, position: 'top', labels: { color:'#9CA3AF', boxWidth:12, padding:14, font:{size:11} } },
-            tooltip: tip
-          },
-          scales: {
-            x: { ticks:{color:'#9CA3AF'}, grid:{color:'rgba(255,255,255,0.05)'} },
-            y: { ticks:{color:'#9CA3AF'}, grid:{color:'rgba(255,255,255,0.05)'}, beginAtZero:true }
-          }
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ display:true, position:'top', labels:{color:'#9CA3AF',boxWidth:12,padding:14,font:{size:11}} }, tooltip:tip },
+          scales:{ x:{ticks:{color:'#9CA3AF'},grid:{color:'rgba(255,255,255,0.05)'}}, y:{ticks:{color:'#9CA3AF'},grid:{color:'rgba(255,255,255,0.05)'},beginAtZero:true} }
         }
       });
 
-      // ── Gráfico 2: Top procedimentos ──
+      // ── Gráfico 2: Top procedimentos (dados filtrados) ──
       const procMap = new Map();
-      dados.forEach(d => {
-        const p = d.procedimento || 'Não informado';
-        procMap.set(p, (procMap.get(p) || 0) + 1);
-      });
-      const topProc = [...procMap.entries()].sort((a,b) => b[1]-a[1]).slice(0, 10);
-      const CORES = ['#10B981','#059669','#3B82F6','#6366F1','#F59E0B','#EC4899','#14B8A6','#8B5CF6','#F97316','#22D3EE'];
+      dados.forEach(d => { const p=d.procedimento||'Não informado'; procMap.set(p,(procMap.get(p)||0)+1); });
+      const topProc = [...procMap.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
 
       chartAutProcInst = new Chart(document.getElementById('chartAutProc').getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: topProc.map(([p]) => truncar(p, 38)),
-          datasets: [{
-            label: 'Autorizações',
-            data: topProc.map(([,q]) => q),
-            backgroundColor: CORES.slice(0, topProc.length).map(c => c + 'CC'),
-            borderColor: CORES.slice(0, topProc.length),
-            borderWidth: 1, borderRadius: 4, borderSkipped: false
-          }]
-        },
-        options: {
-          ...barOpts(tip),
-          indexAxis: 'y',
-          plugins: { legend:{display:false}, tooltip:tip }
-        }
+        type:'bar',
+        data:{ labels:topProc.map(([p])=>truncar(p,38)), datasets:[{label:'Qtd',data:topProc.map(([,q])=>q),backgroundColor:CORES.slice(0,topProc.length).map(c=>c+'CC'),borderColor:CORES.slice(0,topProc.length),borderWidth:1,borderRadius:4,borderSkipped:false}] },
+        options:{...barOpts(tip),indexAxis:'y',plugins:{legend:{display:false},tooltip:tip}}
       });
 
-      // ── Gráfico 3: Top unidades executantes ──
+      // ── Gráfico 3: Top unidades (dados filtrados) ──
       const unidMap = new Map();
-      dados.forEach(d => {
-        const u = d.unidadeExecutante || 'Não informada';
-        unidMap.set(u, (unidMap.get(u) || 0) + 1);
-      });
-      const topUnid = [...unidMap.entries()].sort((a,b) => b[1]-a[1]).slice(0, 10);
+      dados.forEach(d => { const u=d.unidadeExecutante||'Não informada'; unidMap.set(u,(unidMap.get(u)||0)+1); });
+      const topUnid = [...unidMap.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+      const CORES2  = [...CORES].reverse();
 
       chartAutUnidadesInst = new Chart(document.getElementById('chartAutUnidades').getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: topUnid.map(([u]) => truncar(u, 38)),
-          datasets: [{
-            label: 'Procedimentos',
-            data: topUnid.map(([,q]) => q),
-            backgroundColor: CORES.slice(0, topUnid.length).map((c,i) => (CORES[CORES.length-1-i] || CORES[i]) + 'CC'),
-            borderColor: CORES.slice(0, topUnid.length).map((c,i) => CORES[CORES.length-1-i] || CORES[i]),
-            borderWidth: 1, borderRadius: 4, borderSkipped: false
-          }]
-        },
-        options: {
-          ...barOpts(tip),
-          indexAxis: 'y',
-          plugins: { legend:{display:false}, tooltip:tip }
-        }
+        type:'bar',
+        data:{ labels:topUnid.map(([u])=>truncar(u,38)), datasets:[{label:'Qtd',data:topUnid.map(([,q])=>q),backgroundColor:CORES2.slice(0,topUnid.length).map(c=>c+'CC'),borderColor:CORES2.slice(0,topUnid.length),borderWidth:1,borderRadius:4,borderSkipped:false}] },
+        options:{...barOpts(tip),indexAxis:'y',plugins:{legend:{display:false},tooltip:tip}}
       });
     }
 
-    // Normaliza o campo "Mês da Autorização" para chave "YYYY-MM"
-    // Aceita: "Janeiro/2024", "01/2024", "2024-01", "jan/24" etc.
+    // ── Tabela de usuários com expansão ──
+    function renderizarAutUsuarios(dados) {
+      // Só conta execuções (com data de execução preenchida)
+      const execDados = dados.filter(d => d.dataExecucao && d.dataExecucao.trim() !== '');
+
+      // Agrupa por usuário
+      const userMap = new Map();
+      execDados.forEach(d => {
+        const u = d.usuario || 'Não identificado';
+        if (!userMap.has(u)) userMap.set(u, []);
+        userMap.get(u).push(d);
+      });
+
+      const sorted = [...userMap.entries()].sort((a,b) => b[1].length - a[1].length);
+      const container = document.getElementById('autUserList');
+
+      if (!sorted.length) {
+        container.innerHTML = '<p style="color:var(--text-secondary);font-size:.85rem;padding:12px;">Nenhum procedimento executado no período.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      sorted.forEach(([usuario, procs], idx) => {
+        const rowId = 'autUser_' + idx;
+        const div = document.createElement('div');
+        div.className = 'aut-user-row';
+        div.innerHTML = `
+          <div class="aut-user-header" onclick="toggleAutUser('${rowId}')">
+            <span class="aut-user-name">${usuario}</span>
+            <span class="aut-user-count">
+              ${procs.length} procedimento${procs.length !== 1 ? 's' : ''}
+              <span class="aut-chevron" id="chev_${rowId}">▼</span>
+            </span>
+          </div>
+          <div class="aut-proc-list" id="${rowId}">
+            ${procs.sort((a,b) => (b.dataExecucao||'').localeCompare(a.dataExecucao||'')).map(p => `
+              <div class="aut-proc-item">
+                <span>${truncar(p.procedimento || '—', 60)}</span>
+                <span class="proc-data">${p.dataExecucao ? fmtData(p.dataExecucao) : '—'}</span>
+              </div>
+            `).join('')}
+          </div>`;
+        container.appendChild(div);
+      });
+    }
+
+    function toggleAutUser(id) {
+      const list = document.getElementById(id);
+      const chev = document.getElementById('chev_' + id);
+      const open = list.classList.toggle('open');
+      if (chev) chev.classList.toggle('open', open);
+    }
+
     function normalizarMes(str) {
       if (!str) return null;
       const s = str.trim();
-
-      // Tenta formato "YYYY-MM"
-      if (/^\d{4}-\d{2}$/.test(s)) return s;
-
-      // Tenta formato "MM/YYYY"
-      const mmYYYY = s.match(/^(\d{1,2})\/(\d{4})$/);
-      if (mmYYYY) return `${mmYYYY[2]}-${mmYYYY[1].padStart(2,'0')}`;
-
-      // Tenta "NomeMes/YYYY" ou "NomeMes YYYY"
-      const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-      const nomeMes = s.match(/([a-záàãâéêíóôõúç]+)[\/\s\-](\d{2,4})/i);
-      if (nomeMes) {
-        const idx = meses.findIndex(m => m.startsWith(nomeMes[1].toLowerCase().slice(0,3)));
-        if (idx >= 0) {
-          let ano = nomeMes[2];
-          if (ano.length === 2) ano = '20' + ano;
-          return `${ano}-${String(idx+1).padStart(2,'0')}`;
-        }
-      }
-
-      // Tenta somente nome de mês (sem ano — assume ano corrente)
-      const soloMes = meses.findIndex(m => m.toLowerCase() === s.toLowerCase());
-      if (soloMes >= 0) return `${new Date().getFullYear()}-${String(soloMes+1).padStart(2,'0')}`;
-
+      if (/^\d{4}-\d{2}$/.test(s)) return s;                      // já "YYYY-MM"
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s.slice(0,7);     // "YYYY-MM-DD"
+      const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,'0')}`;       // "DD/MM/YYYY"
+      const my = s.match(/^(\d{1,2})\/(\d{4})$/);
+      if (my)  return `${my[2]}-${my[1].padStart(2,'0')}`;         // "MM/YYYY"
       return null;
     }
-
-    function compararMeses(a, b) { return a.localeCompare(b); }
 
     function formatarMesLabel(yyyymm) {
       const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
