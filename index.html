@@ -699,35 +699,50 @@
     .btn-limpar-aut:hover { background: rgba(255,255,255,.05); }
 
     /* Tabela de usuários */
-    .aut-user-table { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); overflow-x:auto; margin-bottom: 32px; }
-    .aut-user-table h2 { font-size:.9rem; font-weight:600; color:var(--text-primary); margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+    .aut-user-table { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); margin-bottom:32px; }
+    .aut-user-table-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+    .aut-user-table-header h2 { font-size:.9rem; font-weight:600; color:var(--text-primary); }
+    .aut-user-subtitle { font-size:.75rem; color:var(--text-secondary); font-weight:400; }
+    .aut-user-search-wrap { position:relative; display:flex; align-items:center; }
+    .aut-user-search-wrap svg { position:absolute; left:10px; color:var(--text-secondary); pointer-events:none; }
+    #autUserSearch { background:var(--bg-card-alt); border:1px solid var(--border); border-radius:8px; padding:8px 12px 8px 32px; font-size:.82rem; color:var(--text-primary); width:220px; outline:none; transition:border-color .2s; }
+    #autUserSearch::placeholder { color:var(--text-secondary); }
+    #autUserSearch:focus { border-color:var(--emerald); }
+    @media(max-width:600px){ #autUserSearch{ width:100%; } .aut-user-table-header{ flex-direction:column; align-items:flex-start; } }
+
     .aut-user-row { border-bottom:1px solid rgba(255,255,255,.04); }
-    .aut-user-header {
-      display:flex; align-items:center; justify-content:space-between;
-      padding:10px 14px; cursor:pointer; transition: background .15s;
-      border-radius: 6px;
-    }
-    .aut-user-header:hover { background: rgba(16,185,129,.06); }
-    .aut-user-name { font-size:.88rem; color:var(--text-primary); font-weight:500; }
-    .aut-user-count {
-      background: var(--emerald-glow); color: var(--emerald);
-      border: 1px solid rgba(16,185,129,.3); border-radius:20px;
-      padding:2px 10px; font-size:.76rem; font-weight:700;
-      display:flex; align-items:center; gap:8px;
-    }
-    .aut-chevron { transition: transform .2s; font-size:.8rem; color:var(--text-secondary); }
-    .aut-chevron.open { transform: rotate(180deg); }
-    .aut-proc-list {
-      display:none; padding: 0 14px 12px 28px;
-    }
+    .aut-user-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; cursor:pointer; transition:background .15s; border-radius:6px; gap:8px; }
+    .aut-user-header:hover { background:rgba(16,185,129,.06); }
+    .aut-user-name { font-size:.88rem; color:var(--text-primary); font-weight:500; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .aut-user-count { flex-shrink:0; background:var(--emerald-glow); color:var(--emerald); border:1px solid rgba(16,185,129,.3); border-radius:20px; padding:2px 10px; font-size:.76rem; font-weight:700; display:flex; align-items:center; gap:6px; }
+    .aut-chevron { transition:transform .2s; font-size:.8rem; color:var(--text-secondary); flex-shrink:0; }
+    .aut-chevron.open { transform:rotate(180deg); }
+    .aut-proc-list { display:none; padding:0 14px 12px 28px; }
     .aut-proc-list.open { display:block; }
-    .aut-proc-item {
-      font-size:.82rem; color:var(--text-secondary); padding:5px 0;
-      border-bottom:1px solid rgba(255,255,255,.03);
-      display:flex; justify-content:space-between; gap:16px;
-    }
+    .aut-proc-item { font-size:.82rem; color:var(--text-secondary); padding:6px 0; border-bottom:1px solid rgba(255,255,255,.03); display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
     .aut-proc-item:last-child { border-bottom:none; }
-    .aut-proc-item .proc-data { color: var(--text-secondary); font-size:.76rem; white-space:nowrap; }
+    .aut-proc-item .proc-data { color:var(--text-secondary); font-size:.76rem; white-space:nowrap; flex-shrink:0; }
+
+    .btn-ver-mais { display:block; width:100%; margin-top:12px; padding:10px; background:transparent; border:1px dashed var(--border); color:var(--text-secondary); border-radius:8px; font-size:.82rem; cursor:pointer; transition:background .2s, color .2s; }
+    .btn-ver-mais:hover { background:var(--emerald-glow); color:var(--emerald); border-color:var(--emerald); }
+
+    /* Responsivo mobile */
+    @media(max-width:768px){
+      .aut-kpi-grid { grid-template-columns: repeat(2,1fr); }
+      .aut-charts-bottom { grid-template-columns: 1fr; }
+      .aut-filters { flex-direction:column; align-items:flex-start; }
+      main { padding: 16px 12px 40px; }
+      .nav-tabs { padding: 0 12px; }
+      .nav-tab { padding: 10px 12px; font-size:.78rem; }
+      header { padding: 10px 16px; }
+      .header-text h1 { font-size:.95rem; }
+      .header-text p { display:none; }
+    }
+    @media(max-width:480px){
+      .aut-kpi-grid { grid-template-columns: 1fr; }
+      .kpi-grid-geral, .kpi-grid-risco { grid-template-columns: 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -962,12 +977,6 @@
           </div>
         </div>
 
-        <!-- Tabela de usuários -->
-        <div class="aut-user-table">
-          <h2>👤 Usuários — Procedimentos Executados <span style="font-size:.78rem;color:var(--text-secondary);font-weight:400">(clique para expandir)</span></h2>
-          <div id="autUserList"></div>
-        </div>
-
         <!-- Gráficos: Top procedimentos e Top unidades -->
         <div class="aut-charts-bottom">
           <div class="chart-card">
@@ -977,6 +986,25 @@
           <div class="chart-card">
             <div class="chart-title">Top Unidades Executantes</div>
             <div class="chart-wrap" style="height:320px"><canvas id="chartAutUnidades"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Tabela de pacientes -->
+        <div class="aut-user-table">
+          <div class="aut-user-table-header">
+            <h2>👤 Pacientes — Procedimentos Executados
+              <span class="aut-user-subtitle">(clique no nome para expandir)</span>
+            </h2>
+            <div class="aut-user-search-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input type="text" id="autUserSearch" placeholder="Buscar paciente…" oninput="filtrarUsuarios()" />
+            </div>
+          </div>
+          <div id="autUserList"></div>
+          <div id="autUserMais" style="display:none">
+            <button class="btn-ver-mais" onclick="mostrarTodosUsuarios()">Ver todos os pacientes</button>
           </div>
         </div>
 
@@ -1784,12 +1812,12 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
       });
     }
 
-    // ── Tabela de usuários com expansão ──
+    // ── Tabela de pacientes com top 20 + busca ──
+    let autUserSorted = []; // todos os pacientes ordenados por qtd
+
     function renderizarAutUsuarios(dados) {
-      // Só conta execuções (com data de execução preenchida)
       const execDados = dados.filter(d => d.dataExecucao && d.dataExecucao.trim() !== '');
 
-      // Agrupa por usuário
       const userMap = new Map();
       execDados.forEach(d => {
         const u = d.usuario || 'Não identificado';
@@ -1797,37 +1825,66 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
         userMap.get(u).push(d);
       });
 
-      const sorted = [...userMap.entries()].sort((a,b) => b[1].length - a[1].length);
-      const container = document.getElementById('autUserList');
+      autUserSorted = [...userMap.entries()].sort((a,b) => b[1].length - a[1].length);
 
-      if (!sorted.length) {
-        container.innerHTML = '<p style="color:var(--text-secondary);font-size:.85rem;padding:12px;">Nenhum procedimento executado no período.</p>';
+      // Limpa busca e renderiza top 20
+      document.getElementById('autUserSearch').value = '';
+      renderizarListaUsuarios(autUserSorted.slice(0, 20), autUserSorted.length > 20);
+    }
+
+    function filtrarUsuarios() {
+      const termo = document.getElementById('autUserSearch').value.trim().toLowerCase();
+      if (!termo) {
+        renderizarListaUsuarios(autUserSorted.slice(0, 20), autUserSorted.length > 20);
+        return;
+      }
+      const filtrado = autUserSorted.filter(([u]) => u.toLowerCase().includes(termo));
+      renderizarListaUsuarios(filtrado, false);
+    }
+
+    function mostrarTodosUsuarios() {
+      renderizarListaUsuarios(autUserSorted, false);
+    }
+
+    function renderizarListaUsuarios(lista, mostrarBotaoMais) {
+      const container = document.getElementById('autUserList');
+      const btnMais   = document.getElementById('autUserMais');
+
+      if (!lista.length) {
+        container.innerHTML = '<p style="color:var(--text-secondary);font-size:.85rem;padding:12px 14px;">Nenhum paciente encontrado.</p>';
+        btnMais.style.display = 'none';
         return;
       }
 
       container.innerHTML = '';
-      sorted.forEach(([usuario, procs], idx) => {
+      lista.forEach(([usuario, procs], idx) => {
         const rowId = 'autUser_' + idx;
+        const procOrdenados = [...procs].sort((a,b) => (b.dataExecucao||'').localeCompare(a.dataExecucao||''));
         const div = document.createElement('div');
         div.className = 'aut-user-row';
         div.innerHTML = `
           <div class="aut-user-header" onclick="toggleAutUser('${rowId}')">
             <span class="aut-user-name">${usuario}</span>
             <span class="aut-user-count">
-              ${procs.length} procedimento${procs.length !== 1 ? 's' : ''}
+              ${procs.length} proc${procs.length !== 1 ? 's' : ''}
               <span class="aut-chevron" id="chev_${rowId}">▼</span>
             </span>
           </div>
           <div class="aut-proc-list" id="${rowId}">
-            ${procs.sort((a,b) => (b.dataExecucao||'').localeCompare(a.dataExecucao||'')).map(p => `
+            ${procOrdenados.map(p => `
               <div class="aut-proc-item">
-                <span>${truncar(p.procedimento || '—', 60)}</span>
+                <span>${truncar(p.procedimento || '—', 55)}</span>
                 <span class="proc-data">${p.dataExecucao ? fmtData(p.dataExecucao) : '—'}</span>
-              </div>
-            `).join('')}
+              </div>`).join('')}
           </div>`;
         container.appendChild(div);
       });
+
+      btnMais.style.display = mostrarBotaoMais ? 'block' : 'none';
+      if (mostrarBotaoMais) {
+        btnMais.querySelector('button').textContent =
+          'Ver todos os ' + autUserSorted.length + ' pacientes';
+      }
     }
 
     function toggleAutUser(id) {
