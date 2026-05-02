@@ -726,6 +726,27 @@
     .btn-ver-mais { display:block; width:100%; margin-top:12px; padding:10px; background:transparent; border:1px dashed var(--border); color:var(--text-secondary); border-radius:8px; font-size:.82rem; cursor:pointer; transition:background .2s, color .2s; }
     .btn-ver-mais:hover { background:var(--emerald-glow); color:var(--emerald); border-color:var(--emerald); }
 
+    /* Filtro do dashboard */
+    .dash-filters {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 20px;
+      margin-bottom: 24px; display: flex; align-items: flex-end;
+      gap: 14px; flex-wrap: wrap; box-shadow: var(--shadow);
+    }
+    .dash-filters .ia-field input[type="date"] {
+      background: var(--bg-card-alt); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px; font-size:.86rem;
+      color: var(--text-primary); outline: none; color-scheme: dark;
+      transition: border-color .2s;
+    }
+    .dash-filters .ia-field input[type="date"]:focus { border-color: var(--emerald); }
+    .dash-filters .ia-field label { font-size:.74rem; text-transform:uppercase; letter-spacing:.6px; color:var(--text-secondary); display:block; margin-bottom:5px; }
+
+    /* Cards por ano */
+    .kpi-ano { border-color: rgba(99,102,241,.35); }
+    .kpi-ano .kpi-value { color: #818CF8; }
+    .kpi-pct-ano { background: rgba(99,102,241,.15); color: #818CF8; }
+
     /* Responsivo mobile */
     @media(max-width:768px){
       .aut-kpi-grid { grid-template-columns: repeat(2,1fr); }
@@ -826,6 +847,20 @@
           <span id="status">Aguardando dados…</span>
         </div>
 
+        <!-- Filtro de data -->
+        <div class="dash-filters">
+          <div class="ia-field">
+            <label>Data Inicial</label>
+            <input type="date" id="dashDataInicio" onchange="aplicarFiltroDash()" />
+          </div>
+          <div class="ia-field">
+            <label>Data Final</label>
+            <input type="date" id="dashDataFim" onchange="aplicarFiltroDash()" />
+          </div>
+          <button class="btn-limpar-aut" onclick="limparFiltroDash()">Limpar filtro</button>
+          <span id="dashFiltroInfo" style="font-size:.8rem;color:var(--text-secondary);align-self:center;"></span>
+        </div>
+
         <div class="kpi-section-title">Visão Geral</div>
         <div class="kpi-grid-geral">
           <div class="kpi-card">
@@ -837,6 +872,27 @@
             <div class="kpi-label">Total de Solicitações</div>
             <div class="kpi-value" id="kpiTotal">—</div>
             <div class="kpi-unit">registros</div>
+          </div>
+          <div class="kpi-card kpi-ano" id="cardAno2024" style="display:none">
+            <div class="kpi-label">Solicitações 2024</div>
+            <div class="kpi-value" id="kpiAno2024">—</div>
+            <div class="kpi-unit">registros</div>
+            <span class="kpi-pct kpi-pct-ano" id="pctAno2024">—%</span>
+            <div class="kpi-risco-label">do total de solicitações</div>
+          </div>
+          <div class="kpi-card kpi-ano" id="cardAno2025" style="display:none">
+            <div class="kpi-label">Solicitações 2025</div>
+            <div class="kpi-value" id="kpiAno2025">—</div>
+            <div class="kpi-unit">registros</div>
+            <span class="kpi-pct kpi-pct-ano" id="pctAno2025">—%</span>
+            <div class="kpi-risco-label">do total de solicitações</div>
+          </div>
+          <div class="kpi-card kpi-ano" id="cardAno2026" style="display:none">
+            <div class="kpi-label">Solicitações 2026</div>
+            <div class="kpi-value" id="kpiAno2026">—</div>
+            <div class="kpi-unit">registros</div>
+            <span class="kpi-pct kpi-pct-ano" id="pctAno2026">—%</span>
+            <div class="kpi-risco-label">do total de solicitações</div>
           </div>
         </div>
 
@@ -1150,9 +1206,10 @@
     const NOME_KEY  = 'fila_nome';
 
     // ── Estado global ──
-    let todosRegistros = [];
-    let modoTabela     = 'procedimento';
-    let analiseGerada  = false;
+    let todosRegistros  = [];
+    let registrosFiltrados = [];
+    let modoTabela      = 'procedimento';
+    let analiseGerada   = false;
 
     // ── Gráficos ──
     let chartFaixasInst = null, chartRiscoInst = null,
@@ -1273,9 +1330,43 @@
     function onDataLoaded(dados) {
       if (!dados || !dados.length) { setStatus('Nenhum dado encontrado.', true); return; }
       setStatus('Atualizado em: ' + new Date().toLocaleString('pt-BR'), false);
-      todosRegistros = dados.map(d => ({...d, diasEspera: Number(d.diasEspera)})).filter(d => !isNaN(d.diasEspera));
-      renderizarKPIs(todosRegistros);
-      renderizarGraficos(todosRegistros);
+      todosRegistros     = dados.map(d => ({...d, diasEspera: Number(d.diasEspera)})).filter(d => !isNaN(d.diasEspera));
+      registrosFiltrados = todosRegistros;
+      aplicarFiltroDash();
+    }
+
+    function aplicarFiltroDash() {
+      const ini = document.getElementById('dashDataInicio').value;
+      const fim = document.getElementById('dashDataFim').value;
+
+      if (!todosRegistros.length) return;
+
+      if (ini || fim) {
+        registrosFiltrados = todosRegistros.filter(r => {
+          if (ini && r.dataSolicitacao < ini) return false;
+          if (fim && r.dataSolicitacao > fim) return false;
+          return true;
+        });
+        const info = document.getElementById('dashFiltroInfo');
+        info.textContent = registrosFiltrados.length + ' registros de ' +
+          (ini ? fmtData(ini) : '—') + ' a ' + (fim ? fmtData(fim) : '—');
+      } else {
+        registrosFiltrados = todosRegistros;
+        document.getElementById('dashFiltroInfo').textContent = '';
+      }
+
+      renderizarKPIs(registrosFiltrados);
+      renderizarGraficos(registrosFiltrados);
+      renderizarTabela();
+    }
+
+    function limparFiltroDash() {
+      document.getElementById('dashDataInicio').value = '';
+      document.getElementById('dashDataFim').value    = '';
+      document.getElementById('dashFiltroInfo').textContent = '';
+      registrosFiltrados = todosRegistros;
+      renderizarKPIs(registrosFiltrados);
+      renderizarGraficos(registrosFiltrados);
       renderizarTabela();
     }
 
@@ -1328,6 +1419,7 @@
       const total = regs.length;
       document.getElementById('kpiMedia').textContent = media(regs.map(r=>r.diasEspera)).toFixed(1);
       document.getElementById('kpiTotal').textContent = total;
+
       const cont = {vermelho:0,amarelo:0,verde:0,azul:0};
       regs.forEach(r => { const c=normalizarCor(r.corRisco); if(c) cont[c]++; });
       RISCO_ORDEM.forEach(cor => {
@@ -1335,6 +1427,29 @@
         const id=cor.charAt(0).toUpperCase()+cor.slice(1);
         document.getElementById('kpi'+id).textContent=qtd;
         document.getElementById('pct'+id).textContent=pct+'%';
+      });
+
+      // Cards por ano — usa a base completa (todosRegistros) para os totais por ano
+      const base = todosRegistros.length ? todosRegistros : regs;
+      const anos = {};
+      base.forEach(r => {
+        const ano = r.dataSolicitacao ? r.dataSolicitacao.slice(0,4) : null;
+        if (ano) anos[ano] = (anos[ano] || 0) + 1;
+      });
+      const totalBase = base.length;
+
+      ['2024','2025','2026'].forEach(ano => {
+        const card = document.getElementById('cardAno' + ano);
+        const kpi  = document.getElementById('kpiAno'  + ano);
+        const pct  = document.getElementById('pctAno'  + ano);
+        if (!card) return;
+        if (anos[ano]) {
+          card.style.display = 'block';
+          kpi.textContent = anos[ano];
+          pct.textContent = ((anos[ano] / totalBase) * 100).toFixed(1) + '%';
+        } else {
+          card.style.display = 'none';
+        }
       });
     }
 
@@ -1408,10 +1523,11 @@
     function renderizarTabela() {
       const termo=(document.getElementById('searchInput').value||'').toLowerCase();
       const head=document.getElementById('tableHead'), tbody=document.getElementById('tabelaBody');
+      const base = registrosFiltrados.length ? registrosFiltrados : todosRegistros;
 
       if(modoTabela==='procedimento'){
         head.innerHTML=`<tr><th>Procedimento</th><th class="td-right">Qtde em Fila</th><th class="td-right">Tempo Médio de Espera (dias)</th></tr>`;
-        let linhas=[...agruparPor(todosRegistros,r=>r.procedimento).entries()]
+        let linhas=[...agruparPor(base,r=>r.procedimento).entries()]
           .map(([p,rows])=>({p,q:rows.length,m:media(rows.map(r=>r.diasEspera))}))
           .sort((a,b)=>b.m-a.m);
         if(termo)linhas=linhas.filter(l=>l.p.toLowerCase().includes(termo)||String(l.q).includes(termo)||l.m.toFixed(1).includes(termo));
@@ -1425,7 +1541,7 @@
         });
       } else {
         head.innerHTML=`<tr><th>Paciente</th><th>Procedimento</th><th>Risco</th><th class="td-right">Idade</th><th class="td-right">Dias em Espera</th></tr>`;
-        let linhas=[...todosRegistros].sort((a,b)=>a.paciente.localeCompare(b.paciente));
+        let linhas=[...base].sort((a,b)=>a.paciente.localeCompare(b.paciente));
         if(termo)linhas=linhas.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(termo)));
         if(!linhas.length){tbody.innerHTML='<tr class="empty-row"><td colspan="5">Nenhum resultado.</td></tr>';return;}
         tbody.innerHTML='';
