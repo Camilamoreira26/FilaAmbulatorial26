@@ -1861,10 +1861,13 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
     }
 
     function renderizarAutKPIs(dados) {
-      const total      = autRegistros.length; // total sempre da base completa
-      const executados = dados.filter(d => d.dataExecucao && d.dataExecucao.trim() !== '').length;
-      const pendentes  = autRegistros.filter(d => !d.dataExecucao || d.dataExecucao.trim() === '').length;
-      const taxa       = total > 0 ? ((autRegistros.filter(d => d.dataExecucao && d.dataExecucao.trim()).length / total) * 100).toFixed(1) : '0.0';
+      const hoje       = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+      const total      = autRegistros.length;
+      // Executado = tem data de execução E a data já passou (≤ hoje)
+      const executados = dados.filter(d => d.dataExecucao && d.dataExecucao.trim() !== '' && d.dataExecucao <= hoje).length;
+      const pendentes  = autRegistros.filter(d => !d.dataExecucao || d.dataExecucao.trim() === '' || d.dataExecucao > hoje).length;
+      const execBase   = autRegistros.filter(d => d.dataExecucao && d.dataExecucao.trim() !== '' && d.dataExecucao <= hoje).length;
+      const taxa       = total > 0 ? ((execBase / total) * 100).toFixed(1) : '0.0';
 
       document.getElementById('autTotal').textContent      = total;
       document.getElementById('autExecutados').textContent = executados;
@@ -1890,9 +1893,10 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
         if (mes) mesAutMap.set(mes, (mesAutMap.get(mes) || 0) + 1);
       });
 
-      // Execuções: agrupa pelo mês da "Data da Execução" — usa os dados filtrados
+      // Execuções: apenas datas até hoje (já executadas de fato)
+      const hojeStr = new Date().toISOString().split('T')[0];
       dados.forEach(d => {
-        if (d.dataExecucao && /^\d{4}-\d{2}-\d{2}$/.test(d.dataExecucao)) {
+        if (d.dataExecucao && /^\d{4}-\d{2}-\d{2}$/.test(d.dataExecucao) && d.dataExecucao <= hojeStr) {
           const mes = d.dataExecucao.slice(0, 7);
           mesExecMap.set(mes, (mesExecMap.get(mes) || 0) + 1);
         }
