@@ -2228,20 +2228,30 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
 
     function calcularIdade(dataNasc) {
       if (!dataNasc) return null;
-      // Aceita "YYYY-MM-DD" ou "DD/MM/YYYY"
+      const s = String(dataNasc).trim();
+      if (!s) return null;
       let d;
-      if (/^\d{4}-\d{2}-\d{2}$/.test(dataNasc)) {
-        d = new Date(dataNasc + 'T00:00:00');
+      // "YYYY-MM-DD"
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        d = new Date(s + 'T00:00:00');
+      // "DD/MM/YYYY"
+      } else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+        const p = s.split('/');
+        d = new Date(p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')+'T00:00:00');
+      // "DD-MM-YYYY"
+      } else if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(s)) {
+        const p = s.split('-');
+        d = new Date(p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')+'T00:00:00');
       } else {
-        const p = dataNasc.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-        if (!p) return null;
-        d = new Date(p[3]+'-'+p[2].padStart(2,'0')+'-'+p[1].padStart(2,'0')+'T00:00:00');
+        return null;
       }
-      if (isNaN(d)) return null;
+      if (!d || isNaN(d.getTime())) return null;
       const hoje = new Date();
       let idade = hoje.getFullYear() - d.getFullYear();
-      if (hoje.getMonth() < d.getMonth() || (hoje.getMonth()===d.getMonth() && hoje.getDate()<d.getDate())) idade--;
-      return idade;
+      const mesAntes = hoje.getMonth() < d.getMonth();
+      const mesmoDiaAntes = hoje.getMonth() === d.getMonth() && hoje.getDate() < d.getDate();
+      if (mesAntes || mesmoDiaAntes) idade--;
+      return idade >= 0 ? idade : null;
     }
 
     function aplicarFiltroExames() {
