@@ -870,6 +870,13 @@
         </svg>
         Exames Agendados – E-sus
       </button>
+      <button class="nav-tab" id="tabBtnExamesAtendidos" onclick="mudarAba('examesAtendidos')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/>
+        </svg>
+        Exames Atendidos – E-sus
+      </button>
       <button class="nav-tab" id="tabBtnAnalise" onclick="mudarAba('analise')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
@@ -1204,6 +1211,99 @@
 
       </main>
     </div><!-- fim tabExames -->
+
+    <!-- ── ABA: EXAMES ATENDIDOS ── -->
+    <div class="tab-content" id="tabExamesAtendidos">
+      <main>
+
+        <div class="aut-controls">
+          <button class="btn-refresh" id="btnAtualizarExAt" onclick="carregarExamesAtendidos()">⟳ Atualizar dados</button>
+          <span id="exAtStatus">Clique em Atualizar para carregar os dados.</span>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-section-title">Visão Geral – Exames Atendidos</div>
+        <div class="exames-kpi-grid">
+          <div class="exames-kpi">
+            <div class="kpi-label">Total de Atendimentos</div>
+            <div class="kpi-value" id="exAtKpiTotal">—</div>
+            <div class="kpi-unit">registros</div>
+          </div>
+          <div class="exames-kpi azul">
+            <div class="kpi-label">Atendimentos este mês</div>
+            <div class="kpi-value" id="exAtKpiMes">—</div>
+            <div class="kpi-unit" id="exAtKpiMesLabel">registros</div>
+          </div>
+          <div class="exames-kpi roxo">
+            <div class="kpi-label">Unidades Solicitantes</div>
+            <div class="kpi-value" id="exAtKpiUnidades">—</div>
+            <div class="kpi-unit">unidades distintas</div>
+          </div>
+          <div class="exames-kpi ouro">
+            <div class="kpi-label">Procedimentos distintos</div>
+            <div class="kpi-value" id="exAtKpiProcs">—</div>
+            <div class="kpi-unit">tipos de exame</div>
+          </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="aut-charts-top">
+          <div class="chart-card">
+            <div class="chart-title">Atendimentos Mensais</div>
+            <div class="chart-wrap" style="height:280px"><canvas id="chartExAtMensal"></canvas></div>
+          </div>
+        </div>
+        <div class="aut-charts-bottom">
+          <div class="chart-card">
+            <div class="chart-title">Top Unidades Solicitantes</div>
+            <div class="chart-wrap" style="height:320px"><canvas id="chartExAtSolicitante"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Top Unidades Executantes</div>
+            <div class="chart-wrap" style="height:320px"><canvas id="chartExAtExecutante"></canvas></div>
+          </div>
+        </div>
+        <div class="aut-charts-top" style="margin-bottom:28px">
+          <div class="chart-card">
+            <div class="chart-title">Distribuição por Faixa Etária</div>
+            <div class="chart-wrap" style="height:260px"><canvas id="chartExAtIdade"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Filtro de idade -->
+        <div class="exames-age-filter">
+          <label>🎂 Filtro de Idade:</label>
+          <label>De</label>
+          <input type="number" class="age-input" id="exAtIdadeMin" min="0" max="120" placeholder="0" oninput="aplicarFiltroExAt()" />
+          <span class="age-sep">até</span>
+          <input type="number" class="age-input" id="exAtIdadeMax" min="0" max="120" placeholder="120" oninput="aplicarFiltroExAt()" />
+          <label>anos</label>
+          <button class="btn-limpar-aut" onclick="limparFiltroExAt()">Limpar</button>
+          <span id="exAtFiltroInfo" style="font-size:.8rem;color:var(--text-secondary);"></span>
+        </div>
+
+        <!-- Tabela com dois modos -->
+        <div class="exames-table-card">
+          <div class="exames-table-top">
+            <h2>📋 Tabela de Atendimentos</h2>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+              <div class="exames-toggle">
+                <button class="exames-toggle-btn active" id="exAtBtnNome"    onclick="setModoExAt('nome')">Por Paciente</button>
+                <button class="exames-toggle-btn"        id="exAtBtnUnidade" onclick="setModoExAt('unidade')">Por Unidade Solicitante</button>
+              </div>
+              <div class="exames-search-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" class="exames-search" id="exAtSearch" placeholder="Pesquisar…" oninput="renderizarTabelaExAt()" />
+              </div>
+            </div>
+          </div>
+          <div id="exAtTabelaLista"></div>
+        </div>
+
+      </main>
+    </div><!-- fim tabExamesAtendidos -->
 
     <!-- ── ABA: ANÁLISE IA ── -->
     <div class="tab-content" id="tabAnalise">
@@ -2435,6 +2535,220 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
           <div class="aut-user-header" onclick="toggleAutUser('${rowId}')">
             <span class="aut-user-name">${chave}</span>
             <span class="aut-user-count">${itens.length} agend.<span class="aut-chevron" id="chev_${rowId}">▼</span></span>
+          </div>
+          <div class="aut-proc-list" id="${rowId}">${fnDetalhes(itens)}</div>`;
+        container.appendChild(div);
+      });
+    }
+
+    // =============================================
+    // ABA EXAMES ATENDIDOS
+    // =============================================
+    let exAtRegistros  = [];
+    let exAtFiltrados  = [];
+    let exAtModoTabela = 'nome';
+    let chartExAtMensalInst = null, chartExAtSolInst = null, chartExAtExecInst = null, chartExAtIdadeInst = null;
+
+    async function carregarExamesAtendidos() {
+      const token = sessionStorage.getItem(TOKEN_KEY);
+      if (!token) { fazerLogout(); return; }
+      const btn = document.getElementById('btnAtualizarExAt');
+      btn.disabled = true;
+      setExAtStatus('Carregando dados…', false);
+      try {
+        const res  = await fetch(`${APPS_SCRIPT_URL}?token=${encodeURIComponent(token)}&action=examesatendidos`);
+        if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+        const json = await res.json();
+        if (json.status === 'unauthorized') { fazerLogout(); return; }
+        if (json.status === 'error') throw new Error(json.message);
+        exAtRegistros = json.data || [];
+        exAtFiltrados = exAtRegistros;
+        setExAtStatus('Atualizado em: ' + new Date().toLocaleString('pt-BR'), false);
+        renderizarExAt(exAtFiltrados);
+      } catch(err) { setExAtStatus('Erro: ' + err.message, true); }
+      finally { btn.disabled = false; }
+    }
+
+    function setExAtStatus(msg, err) { const el=document.getElementById('exAtStatus'); el.textContent=msg; el.className=err?'error':''; }
+
+    function aplicarFiltroExAt() {
+      const minI = parseInt(document.getElementById('exAtIdadeMin').value);
+      const maxI = parseInt(document.getElementById('exAtIdadeMax').value);
+      const temFiltro = !isNaN(minI) || !isNaN(maxI);
+      if (!temFiltro) { exAtFiltrados = exAtRegistros; document.getElementById('exAtFiltroInfo').textContent=''; }
+      else {
+        exAtFiltrados = exAtRegistros.filter(d => {
+          const idade = calcularIdade(d.dataNascimento);
+          if (idade === null) return false;
+          if (!isNaN(minI) && idade < minI) return false;
+          if (!isNaN(maxI) && idade > maxI) return false;
+          return true;
+        });
+        const min = isNaN(minI)?0:minI, max = isNaN(maxI)?120:maxI;
+        document.getElementById('exAtFiltroInfo').textContent = `${exAtFiltrados.length} registros entre ${min} e ${max} anos`;
+      }
+      renderizarExAt(exAtFiltrados);
+    }
+
+    function limparFiltroExAt() {
+      document.getElementById('exAtIdadeMin').value = '';
+      document.getElementById('exAtIdadeMax').value = '';
+      document.getElementById('exAtFiltroInfo').textContent = '';
+      exAtFiltrados = exAtRegistros;
+      renderizarExAt(exAtFiltrados);
+    }
+
+    function setModoExAt(modo) {
+      exAtModoTabela = modo;
+      document.getElementById('exAtBtnNome').classList.toggle('active', modo==='nome');
+      document.getElementById('exAtBtnUnidade').classList.toggle('active', modo==='unidade');
+      document.getElementById('exAtSearch').value = '';
+      renderizarTabelaExAt();
+    }
+
+    function renderizarExAt(dados) {
+      renderizarExAtKPIs(dados);
+      renderizarExAtGraficos(dados);
+      renderizarTabelaExAt();
+    }
+
+    function renderizarExAtKPIs(dados) {
+      const mesAtual = new Date().toISOString().slice(0,7);
+      const doMes    = dados.filter(d => d.dataAgendamento && d.dataAgendamento.slice(0,7) === mesAtual).length;
+      const unidades = new Set(dados.map(d => d.unidadeSolicitante).filter(Boolean)).size;
+      const procs    = new Set(dados.map(d => d.procedimento).filter(Boolean)).size;
+      const meses    = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const m        = new Date();
+
+      document.getElementById('exAtKpiTotal').textContent    = dados.length;
+      document.getElementById('exAtKpiMes').textContent      = doMes;
+      document.getElementById('exAtKpiMesLabel').textContent = meses[m.getMonth()] + '/' + m.getFullYear();
+      document.getElementById('exAtKpiUnidades').textContent = unidades;
+      document.getElementById('exAtKpiProcs').textContent    = procs;
+    }
+
+    function renderizarExAtGraficos(dados) {
+      [chartExAtMensalInst, chartExAtSolInst, chartExAtExecInst, chartExAtIdadeInst].forEach(c => { if(c) c.destroy(); });
+      chartExAtMensalInst = chartExAtSolInst = chartExAtExecInst = chartExAtIdadeInst = null;
+
+      const tip   = { backgroundColor:'#0B1120', borderColor:'rgba(16,185,129,.4)', borderWidth:1, titleColor:'#F9FAFB', bodyColor:'#9CA3AF' };
+      const CORES = ['#10B981','#3B82F6','#8B5CF6','#F59E0B','#EC4899','#14B8A6','#F97316','#22D3EE','#6366F1','#059669'];
+
+      // Mensal
+      const mensal = new Map();
+      dados.forEach(d => {
+        if (d.dataAgendamento && d.dataAgendamento.length >= 7) {
+          const mm = d.dataAgendamento.slice(0,7);
+          mensal.set(mm, (mensal.get(mm)||0)+1);
+        }
+      });
+      const mesesOrd = [...mensal.keys()].sort();
+      chartExAtMensalInst = new Chart(document.getElementById('chartExAtMensal').getContext('2d'), {
+        type:'bar',
+        data:{ labels: mesesOrd.map(formatarMesLabel), datasets:[{ label:'Atendimentos', data:mesesOrd.map(mm=>mensal.get(mm)||0),
+          backgroundColor:'rgba(16,185,129,.7)', borderColor:'#10B981', borderWidth:1, borderRadius:4, borderSkipped:false }] },
+        options:{ ...barOpts(tip), plugins:{legend:{display:false},tooltip:tip} }
+      });
+
+      // Unidade Solicitante
+      const solMap = new Map();
+      dados.forEach(d => { const u=d.unidadeSolicitante||'Não informada'; solMap.set(u,(solMap.get(u)||0)+1); });
+      const topSol = [...solMap.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+      chartExAtSolInst = new Chart(document.getElementById('chartExAtSolicitante').getContext('2d'), {
+        type:'bar',
+        data:{ labels:topSol.map(([u])=>truncar(u,38)), datasets:[{ label:'Qtd', data:topSol.map(([,q])=>q),
+          backgroundColor:CORES.map(c=>c+'CC'), borderColor:CORES, borderWidth:1, borderRadius:4, borderSkipped:false }] },
+        options:{ ...barOpts(tip), indexAxis:'y', plugins:{legend:{display:false},tooltip:tip} }
+      });
+
+      // Unidade Executante
+      const execMap = new Map();
+      dados.forEach(d => { const u=d.unidadeExecutante||'Não informada'; execMap.set(u,(execMap.get(u)||0)+1); });
+      const topExec = [...execMap.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+      const CORES2  = [...CORES].reverse();
+      chartExAtExecInst = new Chart(document.getElementById('chartExAtExecutante').getContext('2d'), {
+        type:'bar',
+        data:{ labels:topExec.map(([u])=>truncar(u,38)), datasets:[{ label:'Qtd', data:topExec.map(([,q])=>q),
+          backgroundColor:CORES2.map(c=>c+'CC'), borderColor:CORES2, borderWidth:1, borderRadius:4, borderSkipped:false }] },
+        options:{ ...barOpts(tip), indexAxis:'y', plugins:{legend:{display:false},tooltip:tip} }
+      });
+
+      // Faixa etária
+      const faixas  = ['0–1','2–12','13–17','18–29','30–44','45–59','60–74','75+'];
+      const contFx  = Object.fromEntries(faixas.map(f=>[f,0]));
+      const coresFx = ['#10B981','#3B82F6','#6366F1','#8B5CF6','#F59E0B','#F97316','#EF4444','#DC2626'];
+      dados.forEach(d => {
+        const idade = calcularIdade(d.dataNascimento);
+        if (idade === null) return;
+        if      (idade <= 1)  contFx['0–1']++;
+        else if (idade <= 12) contFx['2–12']++;
+        else if (idade <= 17) contFx['13–17']++;
+        else if (idade <= 29) contFx['18–29']++;
+        else if (idade <= 44) contFx['30–44']++;
+        else if (idade <= 59) contFx['45–59']++;
+        else if (idade <= 74) contFx['60–74']++;
+        else                  contFx['75+']++;
+      });
+      chartExAtIdadeInst = new Chart(document.getElementById('chartExAtIdade').getContext('2d'), {
+        type:'bar',
+        data:{ labels:faixas, datasets:[{ label:'Pacientes', data:faixas.map(f=>contFx[f]),
+          backgroundColor:coresFx, borderColor:coresFx, borderWidth:0, borderRadius:6, borderSkipped:false }] },
+        options:{ ...barOpts(tip), plugins:{legend:{display:false},tooltip:tip} }
+      });
+    }
+
+    function renderizarTabelaExAt() {
+      const termo     = (document.getElementById('exAtSearch').value||'').toLowerCase();
+      const container = document.getElementById('exAtTabelaLista');
+      const dados     = exAtFiltrados;
+
+      if (exAtModoTabela === 'nome') {
+        const nomeMap = new Map();
+        dados.forEach(d => {
+          const n = d.nome || 'Não identificado';
+          if (!nomeMap.has(n)) nomeMap.set(n, []);
+          nomeMap.get(n).push(d);
+        });
+        let lista = [...nomeMap.entries()].sort((a,b) => b[1].length - a[1].length);
+        if (termo) lista = lista.filter(([n, procs]) =>
+          n.toLowerCase().includes(termo) ||
+          procs.some(p => (p.unidadeSolicitante||'').toLowerCase().includes(termo))
+        );
+        renderizarListaExpandivelExAt(container, lista, (procs) =>
+          procs.map(p => `<div class="aut-proc-item"><span>${truncar(p.procedimento||'—',55)}</span><span class="proc-data">${truncar(p.unidadeSolicitante||'—',35)}</span></div>`).join('')
+        );
+      } else {
+        const unidMap = new Map();
+        dados.forEach(d => {
+          const u = d.unidadeSolicitante || 'Não informada';
+          if (!unidMap.has(u)) unidMap.set(u, []);
+          unidMap.get(u).push(d);
+        });
+        let lista = [...unidMap.entries()].sort((a,b) => b[1].length - a[1].length);
+        if (termo) lista = lista.filter(([u, procs]) =>
+          u.toLowerCase().includes(termo) ||
+          procs.some(p => (p.procedimento||'').toLowerCase().includes(termo) || (p.nome||'').toLowerCase().includes(termo))
+        );
+        renderizarListaExpandivelExAt(container, lista, (procs) => {
+          const pm = new Map();
+          procs.forEach(p => { const k=p.procedimento||'—'; pm.set(k,(pm.get(k)||0)+1); });
+          return [...pm.entries()].sort((a,b)=>b[1]-a[1])
+            .map(([p,q]) => `<div class="aut-proc-item"><span>${truncar(p,55)}</span><span class="proc-data">${q} atend.</span></div>`).join('');
+        });
+      }
+    }
+
+    function renderizarListaExpandivelExAt(container, lista, fnDetalhes) {
+      if (!lista.length) { container.innerHTML='<p style="color:var(--text-secondary);font-size:.85rem;padding:12px 14px;">Nenhum resultado encontrado.</p>'; return; }
+      container.innerHTML = '';
+      lista.forEach(([chave, itens], idx) => {
+        const rowId = 'exAtRow_' + idx;
+        const div   = document.createElement('div');
+        div.className = 'aut-user-row';
+        div.innerHTML = `
+          <div class="aut-user-header" onclick="toggleAutUser('${rowId}')">
+            <span class="aut-user-name">${chave}</span>
+            <span class="aut-user-count">${itens.length} atend.<span class="aut-chevron" id="chev_${rowId}">▼</span></span>
           </div>
           <div class="aut-proc-list" id="${rowId}">${fnDetalhes(itens)}</div>`;
         container.appendChild(div);
