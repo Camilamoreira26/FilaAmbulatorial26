@@ -119,36 +119,75 @@
     }
     .btn-logout:hover { background: rgba(239,68,68,.1); }
 
-    /* ── Abas de navegação ── */
-    .nav-tabs {
-      background: #070f20;
-      border-bottom: 1px solid var(--border);
+    /* ── Layout principal (sidebar + conteúdo) ── */
+    .app-body {
       display: flex;
-      padding: 0 32px;
-      gap: 4px;
+      height: calc(100vh - 69px); /* altura do header */
+      overflow: hidden;
+    }
+
+    /* ── Sidebar de navegação ── */
+    .nav-sidebar {
+      width: 230px;
+      min-width: 230px;
+      background: #070f20;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 0 24px;
+      gap: 2px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .nav-sidebar-label {
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      padding: 10px 20px 6px;
+      opacity: .6;
     }
     .nav-tab {
-      padding: 12px 20px;
-      font-size: .85rem;
+      padding: 11px 20px;
+      font-size: .82rem;
       font-weight: 600;
       color: var(--text-secondary);
       border: none;
       background: transparent;
       cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: color .2s, border-color .2s;
+      border-left: 3px solid transparent;
+      transition: color .2s, background .2s, border-color .2s;
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 10px;
+      text-align: left;
+      width: 100%;
+      line-height: 1.3;
     }
-    .nav-tab:hover  { color: var(--text-primary); }
-    .nav-tab.active { color: var(--emerald); border-bottom-color: var(--emerald); }
+    .nav-tab:hover  { color: var(--text-primary); background: rgba(16,185,129,.05); }
+    .nav-tab.active { color: var(--emerald); border-left-color: var(--emerald); background: rgba(16,185,129,.08); }
+    .nav-tab svg    { flex-shrink: 0; }
 
-    /* ── Conteúdo das abas ── */
+    /* ── Área de conteúdo das abas ── */
+    .tab-contents-area {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
     main { max-width: 1400px; margin: 0 auto; padding: 28px 24px 48px; }
+
+    /* Responsivo mobile — sidebar vira hamburger */
+    @media(max-width:900px){
+      .app-body { flex-direction: column; height: auto; overflow: visible; }
+      .nav-sidebar { width: 100%; min-width: unset; flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid var(--border); padding: 0 8px; gap: 0; overflow-x: auto; overflow-y: visible; }
+      .nav-sidebar-label { display: none; }
+      .nav-tab { border-left: none; border-bottom: 3px solid transparent; padding: 10px 14px; font-size:.76rem; white-space:nowrap; }
+      .nav-tab.active { border-bottom-color: var(--emerald); border-left-color: transparent; }
+      .tab-contents-area { overflow: visible; }
+    }
 
     /* Controles */
     .controls { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
@@ -666,7 +705,9 @@
 
     @media print {
       body { background: #fff !important; }
-      #loginScreen, header, .nav-tabs, .ia-filters, #iaLoading { display: none !important; }
+      #loginScreen, header, .nav-sidebar, .ia-filters, #iaLoading { display: none !important; }
+      .app-body { display: block; }
+      .tab-contents-area { overflow: visible; }
     }
 
     /* ══════════════════════════════════
@@ -788,8 +829,6 @@
       .aut-charts-bottom { grid-template-columns: 1fr; }
       .aut-filters { flex-direction:column; align-items:flex-start; }
       main { padding: 16px 12px 40px; }
-      .nav-tabs { padding: 0 12px; }
-      .nav-tab { padding: 10px 12px; font-size:.78rem; }
       header { padding: 10px 16px; }
       .header-text h1 { font-size:.95rem; }
       .header-text p { display:none; }
@@ -848,35 +887,60 @@
       </div>
     </header>
 
-    <!-- Abas -->
-    <nav class="nav-tabs">
+    <!-- ══ LAYOUT: SIDEBAR + CONTEÚDO ══ -->
+    <div class="app-body">
+
+    <!-- Sidebar de navegação -->
+    <nav class="nav-sidebar">
+
+      <div class="nav-sidebar-label">SISREG</div>
       <button class="nav-tab active" id="tabBtnDashboard" onclick="mudarAba('dashboard')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
           <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
         </svg>
-        Gestão Fila de Regulação – SISREG
+        Gestão Fila de Regulação
       </button>
       <button class="nav-tab" id="tabBtnAutorizadas" onclick="mudarAba('autorizadas')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
         </svg>
-        Autorizada – SISREG
+        Autorizada
       </button>
+
+      <div class="nav-sidebar-label" style="margin-top:8px">E-SUS – EXAMES</div>
       <button class="nav-tab" id="tabBtnExames" onclick="mudarAba('exames')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
           <rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/>
         </svg>
-        Exames Agendados – E-sus
+        Exames Agendados
       </button>
       <button class="nav-tab" id="tabBtnExamesAtendidos" onclick="mudarAba('examesAtendidos')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
           <rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/>
         </svg>
-        Exames Atendidos – E-sus
+        Exames Atendidos
       </button>
+
+      <div class="nav-sidebar-label" style="margin-top:8px">E-SUS – CONSULTAS</div>
+      <button class="nav-tab" id="tabBtnConsultaAgendada" onclick="mudarAba('consultaAgendada')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+          <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+        </svg>
+        Consultas Agendadas
+      </button>
+      <button class="nav-tab" id="tabBtnConsultaAtendida" onclick="mudarAba('consultaAtendida')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+          <path d="M9 16l2 2 4-4"/>
+        </svg>
+        Consultas Atendidas
+      </button>
+
+      <div class="nav-sidebar-label" style="margin-top:8px">ANÁLISE</div>
       <button class="nav-tab" id="tabBtnAnalise" onclick="mudarAba('analise')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
@@ -884,6 +948,9 @@
         Análise das Informações
       </button>
     </nav>
+
+    <!-- Área de conteúdo das abas -->
+    <div class="tab-contents-area">
 
     <!-- ── ABA: DASHBOARD ── -->
     <div class="tab-content active" id="tabDashboard">
@@ -1426,6 +1493,175 @@
 
       </main>
     </div><!-- fim tabAnalise -->
+
+    <!-- ── ABA: CONSULTAS AGENDADAS ── -->
+    <div class="tab-content" id="tabConsultaAgendada">
+      <main>
+        <div class="aut-controls">
+          <button class="btn-refresh" id="btnAtualizarConsAg" onclick="carregarConsulta('agendada')">⟳ Atualizar dados</button>
+          <span id="consAgStatus">Clique em Atualizar para carregar os dados.</span>
+        </div>
+        <div class="kpi-section-title">Visão Geral – Consultas Agendadas</div>
+        <div class="exames-kpi-grid">
+          <div class="exames-kpi">
+            <div class="kpi-label">Total de Agendamentos</div>
+            <div class="kpi-value" id="consAgKpiTotal">—</div>
+            <div class="kpi-unit">registros</div>
+          </div>
+          <div class="exames-kpi azul">
+            <div class="kpi-label">Agendamentos este mês</div>
+            <div class="kpi-value" id="consAgKpiMes">—</div>
+            <div class="kpi-unit" id="consAgKpiMesLabel">registros</div>
+          </div>
+          <div class="exames-kpi roxo">
+            <div class="kpi-label">Unidades Solicitantes</div>
+            <div class="kpi-value" id="consAgKpiUnidades">—</div>
+            <div class="kpi-unit">unidades distintas</div>
+          </div>
+          <div class="exames-kpi ouro">
+            <div class="kpi-label">Procedimentos distintos</div>
+            <div class="kpi-value" id="consAgKpiProcs">—</div>
+            <div class="kpi-unit">tipos de consulta</div>
+          </div>
+        </div>
+        <div class="aut-charts-top">
+          <div class="chart-card">
+            <div class="chart-title">Agendamentos Mensais</div>
+            <div class="chart-wrap" style="height:280px"><canvas id="chartConsAgMensal"></canvas></div>
+          </div>
+        </div>
+        <div class="aut-charts-bottom">
+          <div class="chart-card">
+            <div class="chart-title">Top Unidades Solicitantes</div>
+            <div class="chart-wrap" style="height:320px"><canvas id="chartConsAgSolicitante"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Top Unidades Executantes</div>
+            <div class="chart-wrap" style="height:320px"><canvas id="chartConsAgExecutante"></canvas></div>
+          </div>
+        </div>
+        <div class="aut-charts-top" style="margin-bottom:28px">
+          <div class="chart-card">
+            <div class="chart-title">Distribuição por Faixa Etária</div>
+            <div class="chart-wrap" style="height:260px"><canvas id="chartConsAgIdade"></canvas></div>
+          </div>
+        </div>
+        <div class="exames-age-filter">
+          <label>🎂 Filtro de Idade:</label>
+          <label>De</label>
+          <input type="number" class="age-input" id="consAgIdadeMin" min="0" max="120" placeholder="0" oninput="aplicarFiltroConsulta('agendada')" />
+          <span class="age-sep">até</span>
+          <input type="number" class="age-input" id="consAgIdadeMax" min="0" max="120" placeholder="120" oninput="aplicarFiltroConsulta('agendada')" />
+          <label>anos</label>
+          <button class="btn-limpar-aut" onclick="limparFiltroConsulta('agendada')">Limpar</button>
+          <span id="consAgFiltroInfo" style="font-size:.8rem;color:var(--text-secondary);"></span>
+        </div>
+        <div class="exames-table-card">
+          <div class="exames-table-top">
+            <h2>📋 Tabela de Agendamentos</h2>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+              <div class="exames-toggle">
+                <button class="exames-toggle-btn active" id="consAgBtnNome"    onclick="setModoConsulta('agendada','nome')">Por Paciente</button>
+                <button class="exames-toggle-btn"        id="consAgBtnUnidade" onclick="setModoConsulta('agendada','unidade')">Por Unidade Solicitante</button>
+              </div>
+              <div class="exames-search-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" class="exames-search" id="consAgSearch" placeholder="Pesquisar…" oninput="renderizarTabelaConsulta('agendada')" />
+              </div>
+            </div>
+          </div>
+          <div id="consAgTabelaLista"></div>
+        </div>
+      </main>
+    </div><!-- fim tabConsultaAgendada -->
+
+    <!-- ── ABA: CONSULTAS ATENDIDAS ── -->
+    <div class="tab-content" id="tabConsultaAtendida">
+      <main>
+        <div class="aut-controls">
+          <button class="btn-refresh" id="btnAtualizarConsAt" onclick="carregarConsulta('atendida')">⟳ Atualizar dados</button>
+          <span id="consAtStatus">Clique em Atualizar para carregar os dados.</span>
+        </div>
+        <div class="kpi-section-title">Visão Geral – Consultas Atendidas</div>
+        <div class="exames-kpi-grid">
+          <div class="exames-kpi">
+            <div class="kpi-label">Total de Atendimentos</div>
+            <div class="kpi-value" id="consAtKpiTotal">—</div>
+            <div class="kpi-unit">registros</div>
+          </div>
+          <div class="exames-kpi azul">
+            <div class="kpi-label">Atendimentos este mês</div>
+            <div class="kpi-value" id="consAtKpiMes">—</div>
+            <div class="kpi-unit" id="consAtKpiMesLabel">registros</div>
+          </div>
+          <div class="exames-kpi roxo">
+            <div class="kpi-label">Unidades Solicitantes</div>
+            <div class="kpi-value" id="consAtKpiUnidades">—</div>
+            <div class="kpi-unit">unidades distintas</div>
+          </div>
+          <div class="exames-kpi ouro">
+            <div class="kpi-label">Procedimentos distintos</div>
+            <div class="kpi-value" id="consAtKpiProcs">—</div>
+            <div class="kpi-unit">tipos de consulta</div>
+          </div>
+        </div>
+        <div class="aut-charts-top">
+          <div class="chart-card">
+            <div class="chart-title">Atendimentos Mensais</div>
+            <div class="chart-wrap" style="height:280px"><canvas id="chartConsAtMensal"></canvas></div>
+          </div>
+        </div>
+        <div class="aut-charts-bottom">
+          <div class="chart-card">
+            <div class="chart-title">Top Unidades Solicitantes</div>
+            <div class="chart-wrap" style="height:320px"><canvas id="chartConsAtSolicitante"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Top Unidades Executantes</div>
+            <div class="chart-wrap" style="height:320px"><canvas id="chartConsAtExecutante"></canvas></div>
+          </div>
+        </div>
+        <div class="aut-charts-top" style="margin-bottom:28px">
+          <div class="chart-card">
+            <div class="chart-title">Distribuição por Faixa Etária</div>
+            <div class="chart-wrap" style="height:260px"><canvas id="chartConsAtIdade"></canvas></div>
+          </div>
+        </div>
+        <div class="exames-age-filter">
+          <label>🎂 Filtro de Idade:</label>
+          <label>De</label>
+          <input type="number" class="age-input" id="consAtIdadeMin" min="0" max="120" placeholder="0" oninput="aplicarFiltroConsulta('atendida')" />
+          <span class="age-sep">até</span>
+          <input type="number" class="age-input" id="consAtIdadeMax" min="0" max="120" placeholder="120" oninput="aplicarFiltroConsulta('atendida')" />
+          <label>anos</label>
+          <button class="btn-limpar-aut" onclick="limparFiltroConsulta('atendida')">Limpar</button>
+          <span id="consAtFiltroInfo" style="font-size:.8rem;color:var(--text-secondary);"></span>
+        </div>
+        <div class="exames-table-card">
+          <div class="exames-table-top">
+            <h2>📋 Tabela de Atendimentos</h2>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+              <div class="exames-toggle">
+                <button class="exames-toggle-btn active" id="consAtBtnNome"    onclick="setModoConsulta('atendida','nome')">Por Paciente</button>
+                <button class="exames-toggle-btn"        id="consAtBtnUnidade" onclick="setModoConsulta('atendida','unidade')">Por Unidade Solicitante</button>
+              </div>
+              <div class="exames-search-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" class="exames-search" id="consAtSearch" placeholder="Pesquisar…" oninput="renderizarTabelaConsulta('atendida')" />
+              </div>
+            </div>
+          </div>
+          <div id="consAtTabelaLista"></div>
+        </div>
+      </main>
+    </div><!-- fim tabConsultaAtendida -->
+
+    </div><!-- fim tab-contents-area -->
+    </div><!-- fim app-body -->
 
   </div><!-- fim dashboardScreen -->
 
@@ -2535,6 +2771,257 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
           <div class="aut-user-header" onclick="toggleAutUser('${rowId}')">
             <span class="aut-user-name">${chave}</span>
             <span class="aut-user-count">${itens.length} agend.<span class="aut-chevron" id="chev_${rowId}">▼</span></span>
+          </div>
+          <div class="aut-proc-list" id="${rowId}">${fnDetalhes(itens)}</div>`;
+        container.appendChild(div);
+      });
+    }
+
+    // =============================================
+    // ABAS CONSULTAS (AGENDADA e ATENDIDA) — engine genérica
+    // =============================================
+    const consState = {
+      agendada: { registros:[], filtrados:[], modo:'nome',
+        charts:{ mensal:null, sol:null, exec:null, idade:null } },
+      atendida: { registros:[], filtrados:[], modo:'nome',
+        charts:{ mensal:null, sol:null, exec:null, idade:null } }
+    };
+
+    // IDs de elementos por tipo
+    function consIds(tipo) {
+      const p = tipo === 'agendada' ? 'consAg' : 'consAt';
+      return {
+        statusEl:     p + 'Status',
+        btnAtualizar: 'btnAtualizarCons' + (tipo==='agendada'?'Ag':'At'),
+        kpiTotal:     p + 'KpiTotal',  kpiMes:     p + 'KpiMes',
+        kpiMesLabel:  p + 'KpiMesLabel', kpiUnidades: p + 'KpiUnidades',
+        kpiProcs:     p + 'KpiProcs',
+        filtroInfo:   p + 'FiltroInfo', search:      p + 'Search',
+        tabelaLista:  p + 'TabelaLista',
+        idadeMin:     p + 'IdadeMin',  idadeMax:     p + 'IdadeMax',
+        btnNome:      p + 'BtnNome',   btnUnidade:   p + 'BtnUnidade',
+        chartMensal:  'chartCons' + (tipo==='agendada'?'Ag':'At') + 'Mensal',
+        chartSol:     'chartCons' + (tipo==='agendada'?'Ag':'At') + 'Solicitante',
+        chartExec:    'chartCons' + (tipo==='agendada'?'Ag':'At') + 'Executante',
+        chartIdade:   'chartCons' + (tipo==='agendada'?'Ag':'At') + 'Idade',
+        action:       tipo === 'agendada' ? 'consultaagendada' : 'consultaatendida'
+      };
+    }
+
+    async function carregarConsulta(tipo) {
+      const token = sessionStorage.getItem(TOKEN_KEY);
+      if (!token) { fazerLogout(); return; }
+      const ids = consIds(tipo);
+      const btn = document.getElementById(ids.btnAtualizar);
+      btn.disabled = true;
+      setConsStatus(tipo, 'Carregando dados…', false);
+      try {
+        const res  = await fetch(`${APPS_SCRIPT_URL}?token=${encodeURIComponent(token)}&action=${ids.action}`);
+        if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+        const json = await res.json();
+        if (json.status === 'unauthorized') { fazerLogout(); return; }
+        if (json.status === 'error') throw new Error(json.message);
+        const st = consState[tipo];
+        st.registros = json.data || [];
+        st.filtrados = st.registros;
+        setConsStatus(tipo, 'Atualizado em: ' + new Date().toLocaleString('pt-BR'), false);
+        renderizarConsulta(tipo, st.filtrados);
+      } catch(err) { setConsStatus(tipo, 'Erro: ' + err.message, true); }
+      finally { btn.disabled = false; }
+    }
+
+    function setConsStatus(tipo, msg, err) {
+      const el = document.getElementById(consIds(tipo).statusEl);
+      el.textContent = msg; el.className = err ? 'error' : '';
+    }
+
+    function aplicarFiltroConsulta(tipo) {
+      const ids = consIds(tipo), st = consState[tipo];
+      const minI = parseInt(document.getElementById(ids.idadeMin).value);
+      const maxI = parseInt(document.getElementById(ids.idadeMax).value);
+      const temFiltro = !isNaN(minI) || !isNaN(maxI);
+      if (!temFiltro) { st.filtrados = st.registros; document.getElementById(ids.filtroInfo).textContent = ''; }
+      else {
+        st.filtrados = st.registros.filter(d => {
+          const idade = calcularIdade(d.dataNascimento);
+          if (idade === null) return false;
+          if (!isNaN(minI) && idade < minI) return false;
+          if (!isNaN(maxI) && idade > maxI) return false;
+          return true;
+        });
+        const min = isNaN(minI)?0:minI, max = isNaN(maxI)?120:maxI;
+        document.getElementById(ids.filtroInfo).textContent = `${st.filtrados.length} registros entre ${min} e ${max} anos`;
+      }
+      renderizarConsulta(tipo, st.filtrados);
+    }
+
+    function limparFiltroConsulta(tipo) {
+      const ids = consIds(tipo), st = consState[tipo];
+      document.getElementById(ids.idadeMin).value = '';
+      document.getElementById(ids.idadeMax).value = '';
+      document.getElementById(ids.filtroInfo).textContent = '';
+      st.filtrados = st.registros;
+      renderizarConsulta(tipo, st.filtrados);
+    }
+
+    function setModoConsulta(tipo, modo) {
+      const ids = consIds(tipo);
+      consState[tipo].modo = modo;
+      document.getElementById(ids.btnNome).classList.toggle('active', modo==='nome');
+      document.getElementById(ids.btnUnidade).classList.toggle('active', modo==='unidade');
+      document.getElementById(ids.search).value = '';
+      renderizarTabelaConsulta(tipo);
+    }
+
+    function renderizarConsulta(tipo, dados) {
+      renderizarConsKPIs(tipo, dados);
+      renderizarConsGraficos(tipo, dados);
+      renderizarTabelaConsulta(tipo);
+    }
+
+    function renderizarConsKPIs(tipo, dados) {
+      const ids      = consIds(tipo);
+      const mesAtual = new Date().toISOString().slice(0,7);
+      const doMes    = dados.filter(d => d.dataAgendamento && d.dataAgendamento.slice(0,7) === mesAtual).length;
+      const unidades = new Set(dados.map(d => d.unidadeSolicitante).filter(Boolean)).size;
+      const procs    = new Set(dados.map(d => d.procedimento).filter(Boolean)).size;
+      const meses    = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const m        = new Date();
+      document.getElementById(ids.kpiTotal).textContent    = dados.length;
+      document.getElementById(ids.kpiMes).textContent      = doMes;
+      document.getElementById(ids.kpiMesLabel).textContent = meses[m.getMonth()] + '/' + m.getFullYear();
+      document.getElementById(ids.kpiUnidades).textContent = unidades;
+      document.getElementById(ids.kpiProcs).textContent    = procs;
+    }
+
+    function renderizarConsGraficos(tipo, dados) {
+      const ids = consIds(tipo);
+      const st  = consState[tipo];
+      Object.values(st.charts).forEach(c => { if(c) c.destroy(); });
+      st.charts = { mensal:null, sol:null, exec:null, idade:null };
+
+      const tip   = { backgroundColor:'#0B1120', borderColor:'rgba(16,185,129,.4)', borderWidth:1, titleColor:'#F9FAFB', bodyColor:'#9CA3AF' };
+      const CORES = ['#10B981','#3B82F6','#8B5CF6','#F59E0B','#EC4899','#14B8A6','#F97316','#22D3EE','#6366F1','#059669'];
+      const labelMensal = tipo === 'agendada' ? 'Agendamentos' : 'Atendimentos';
+
+      // Mensal
+      const mensal = new Map();
+      dados.forEach(d => {
+        if (d.dataAgendamento && d.dataAgendamento.length >= 7) {
+          const mm = d.dataAgendamento.slice(0,7);
+          mensal.set(mm, (mensal.get(mm)||0)+1);
+        }
+      });
+      const mesesOrd = [...mensal.keys()].sort();
+      st.charts.mensal = new Chart(document.getElementById(ids.chartMensal).getContext('2d'), {
+        type:'bar',
+        data:{ labels: mesesOrd.map(formatarMesLabel), datasets:[{ label:labelMensal, data:mesesOrd.map(mm=>mensal.get(mm)||0),
+          backgroundColor:'rgba(16,185,129,.7)', borderColor:'#10B981', borderWidth:1, borderRadius:4, borderSkipped:false }] },
+        options:{ ...barOpts(tip), plugins:{legend:{display:false},tooltip:tip} }
+      });
+
+      // Unidade Solicitante
+      const solMap = new Map();
+      dados.forEach(d => { const u=d.unidadeSolicitante||'Não informada'; solMap.set(u,(solMap.get(u)||0)+1); });
+      const topSol = [...solMap.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+      st.charts.sol = new Chart(document.getElementById(ids.chartSol).getContext('2d'), {
+        type:'bar',
+        data:{ labels:topSol.map(([u])=>truncar(u,38)), datasets:[{ label:'Qtd', data:topSol.map(([,q])=>q),
+          backgroundColor:CORES.map(c=>c+'CC'), borderColor:CORES, borderWidth:1, borderRadius:4, borderSkipped:false }] },
+        options:{ ...barOpts(tip), indexAxis:'y', plugins:{legend:{display:false},tooltip:tip} }
+      });
+
+      // Unidade Executante
+      const execMap = new Map();
+      dados.forEach(d => { const u=d.unidadeExecutante||'Não informada'; execMap.set(u,(execMap.get(u)||0)+1); });
+      const topExec = [...execMap.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+      const CORES2  = [...CORES].reverse();
+      st.charts.exec = new Chart(document.getElementById(ids.chartExec).getContext('2d'), {
+        type:'bar',
+        data:{ labels:topExec.map(([u])=>truncar(u,38)), datasets:[{ label:'Qtd', data:topExec.map(([,q])=>q),
+          backgroundColor:CORES2.map(c=>c+'CC'), borderColor:CORES2, borderWidth:1, borderRadius:4, borderSkipped:false }] },
+        options:{ ...barOpts(tip), indexAxis:'y', plugins:{legend:{display:false},tooltip:tip} }
+      });
+
+      // Faixa etária
+      const faixas  = ['0–1','2–12','13–17','18–29','30–44','45–59','60–74','75+'];
+      const contFx  = Object.fromEntries(faixas.map(f=>[f,0]));
+      const coresFx = ['#10B981','#3B82F6','#6366F1','#8B5CF6','#F59E0B','#F97316','#EF4444','#DC2626'];
+      dados.forEach(d => {
+        const idade = calcularIdade(d.dataNascimento);
+        if (idade === null) return;
+        if      (idade <= 1)  contFx['0–1']++;
+        else if (idade <= 12) contFx['2–12']++;
+        else if (idade <= 17) contFx['13–17']++;
+        else if (idade <= 29) contFx['18–29']++;
+        else if (idade <= 44) contFx['30–44']++;
+        else if (idade <= 59) contFx['45–59']++;
+        else if (idade <= 74) contFx['60–74']++;
+        else                  contFx['75+']++;
+      });
+      st.charts.idade = new Chart(document.getElementById(ids.chartIdade).getContext('2d'), {
+        type:'bar',
+        data:{ labels:faixas, datasets:[{ label:'Pacientes', data:faixas.map(f=>contFx[f]),
+          backgroundColor:coresFx, borderColor:coresFx, borderWidth:0, borderRadius:6, borderSkipped:false }] },
+        options:{ ...barOpts(tip), plugins:{legend:{display:false},tooltip:tip} }
+      });
+    }
+
+    function renderizarTabelaConsulta(tipo) {
+      const ids       = consIds(tipo);
+      const st        = consState[tipo];
+      const termo     = (document.getElementById(ids.search).value||'').toLowerCase();
+      const container = document.getElementById(ids.tabelaLista);
+      const dados     = st.filtrados;
+      const labelUnit = tipo === 'agendada' ? 'agend.' : 'atend.';
+
+      if (st.modo === 'nome') {
+        const nomeMap = new Map();
+        dados.forEach(d => {
+          const n = d.nome || 'Não identificado';
+          if (!nomeMap.has(n)) nomeMap.set(n, []);
+          nomeMap.get(n).push(d);
+        });
+        let lista = [...nomeMap.entries()].sort((a,b) => b[1].length - a[1].length);
+        if (termo) lista = lista.filter(([n, procs]) =>
+          n.toLowerCase().includes(termo) ||
+          procs.some(p => (p.unidadeSolicitante||'').toLowerCase().includes(termo))
+        );
+        renderizarListaExpandivelCons(container, lista, labelUnit, (procs) =>
+          procs.map(p => `<div class="aut-proc-item"><span>${truncar(p.procedimento||'—',55)}</span><span class="proc-data">${truncar(p.unidadeSolicitante||'—',35)}</span></div>`).join('')
+        );
+      } else {
+        const unidMap = new Map();
+        dados.forEach(d => {
+          const u = d.unidadeSolicitante || 'Não informada';
+          if (!unidMap.has(u)) unidMap.set(u, []);
+          unidMap.get(u).push(d);
+        });
+        let lista = [...unidMap.entries()].sort((a,b) => b[1].length - a[1].length);
+        if (termo) lista = lista.filter(([u, procs]) =>
+          u.toLowerCase().includes(termo) ||
+          procs.some(p => (p.procedimento||'').toLowerCase().includes(termo) || (p.nome||'').toLowerCase().includes(termo))
+        );
+        renderizarListaExpandivelCons(container, lista, labelUnit, (procs) => {
+          const pm = new Map();
+          procs.forEach(p => { const k=p.procedimento||'—'; pm.set(k,(pm.get(k)||0)+1); });
+          return [...pm.entries()].sort((a,b)=>b[1]-a[1])
+            .map(([p,q]) => `<div class="aut-proc-item"><span>${truncar(p,55)}</span><span class="proc-data">${q} ${labelUnit}</span></div>`).join('');
+        });
+      }
+    }
+
+    function renderizarListaExpandivelCons(container, lista, labelUnit, fnDetalhes) {
+      if (!lista.length) { container.innerHTML='<p style="color:var(--text-secondary);font-size:.85rem;padding:12px 14px;">Nenhum resultado encontrado.</p>'; return; }
+      container.innerHTML = '';
+      lista.forEach(([chave, itens], idx) => {
+        const rowId = 'consRow_' + labelUnit + '_' + idx;
+        const div   = document.createElement('div');
+        div.className = 'aut-user-row';
+        div.innerHTML = `
+          <div class="aut-user-header" onclick="toggleAutUser('${rowId}')">
+            <span class="aut-user-name">${chave}</span>
+            <span class="aut-user-count">${itens.length} ${labelUnit}<span class="aut-chevron" id="chev_${rowId}">▼</span></span>
           </div>
           <div class="aut-proc-list" id="${rowId}">${fnDetalhes(itens)}</div>`;
         container.appendChild(div);
