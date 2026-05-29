@@ -843,6 +843,127 @@
     .kpi-ano .kpi-value { color: var(--primary-light); }
     .kpi-pct-ano { background: rgba(99,154,165,.15); color: var(--primary-light); }
 
+    /* ══════════════════════════════════
+       SEÇÃO REGULADOS (saíram da fila)
+    ══════════════════════════════════ */
+    .regulados-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--primary-light);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 32px;
+    }
+    .regulados-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--mid2);
+    }
+    .regulados-header-left h2 {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 3px;
+    }
+    .regulados-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: .76rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(54,120,134,.1);
+      color: var(--primary);
+    }
+    .regulados-badge-warn {
+      background: rgba(217,119,6,.1);
+      color: var(--risco-amarelo);
+    }
+    .regulados-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .regulados-search-wrap { position:relative; display:flex; align-items:center; }
+    .regulados-search-wrap svg { position:absolute; left:10px; color:var(--text-secondary); pointer-events:none; }
+    #reguladosSearch {
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 12px 7px 34px;
+      font-size: .82rem;
+      color: var(--text-primary);
+      width: 220px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    #reguladosSearch::placeholder { color: var(--text-secondary); }
+    #reguladosSearch:focus { border-color: var(--primary); }
+
+    .reg-table { width:100%; border-collapse:collapse; font-size:.84rem; }
+    .reg-table thead th {
+      background: var(--mid2);
+      color: var(--primary);
+      text-align: left;
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: .74rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      white-space: nowrap;
+    }
+    .reg-table tbody tr { border-bottom:1px solid rgba(54,120,134,.07); transition:background .15s; }
+    .reg-table tbody tr:hover { background:rgba(54,120,134,.04); }
+    .reg-table tbody td { padding:9px 14px; color:var(--text-primary); }
+    .reg-empty { text-align:center; padding:32px !important; color:var(--text-secondary); font-size:.85rem; }
+
+    .reg-saiu-tag {
+      display: inline-block;
+      font-size: .72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(5,150,105,.1);
+      color: var(--risco-verde);
+    }
+    .reg-dias-tag {
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .btn-limpar-regulados {
+      background: transparent;
+      border: 1px solid rgba(220,38,38,.35);
+      color: var(--risco-vermelho);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-limpar-regulados:hover { background: rgba(220,38,38,.07); }
+
+    .regulados-aviso {
+      font-size: .78rem;
+      color: var(--text-secondary);
+      background: rgba(54,120,134,.07);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .regulados-aviso strong { color: var(--primary); }
+
     /* Responsivo mobile */
     @media(max-width:768px){
       .aut-kpi-grid { grid-template-columns: repeat(2,1fr); }
@@ -1065,6 +1186,46 @@
             <span class="kpi-pct" id="pctAzul">—%</span>
             <div class="kpi-risco-label">Atendimento eletivo</div>
           </div>
+        </div>
+
+        <!-- ── Regulados nos últimos 30 dias ── -->
+        <div class="kpi-section-title" style="margin-top:4px">📤 Saídas da Fila – Pacientes Regulados</div>
+        <div class="regulados-card">
+          <div class="regulados-header">
+            <div class="regulados-header-left">
+              <h2>Pacientes que saíram nos últimos 30 dias</h2>
+              <span id="reguladosBadge" class="regulados-badge">0 saídas detectadas</span>
+            </div>
+            <div class="regulados-controls">
+              <div class="regulados-search-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="reguladosSearch" placeholder="Buscar paciente ou procedimento…" oninput="renderizarReguladosTabela()" />
+              </div>
+              <button class="btn-limpar-regulados" onclick="limparHistoricoReguladoss()" title="Apagar todo o histórico local">
+                🗑 Limpar histórico
+              </button>
+            </div>
+          </div>
+          <div class="regulados-aviso" id="reguladosAviso">
+            <strong>ℹ️ Como funciona:</strong> a cada carregamento dos dados, o sistema compara a lista atual com o último snapshot salvo neste navegador. Pacientes que constavam anteriormente e não aparecem mais são registrados aqui como <em>possíveis regulados</em>. O histórico cobre os <strong>últimos 30 dias</strong> e é salvo localmente neste dispositivo.
+          </div>
+          <table class="reg-table">
+            <thead>
+              <tr>
+                <th>Paciente</th>
+                <th>Procedimento</th>
+                <th>Risco</th>
+                <th style="text-align:right">Dias em Espera</th>
+                <th style="text-align:right">Data Solicitação</th>
+                <th style="text-align:right">Detectado em</th>
+              </tr>
+            </thead>
+            <tbody id="reguladosBody">
+              <tr><td class="reg-empty" colspan="6">Aguardando carregamento dos dados…</td></tr>
+            </tbody>
+          </table>
         </div>
 
         <div class="charts-grid">
@@ -1826,6 +1987,17 @@
       setStatus('Atualizado em: ' + new Date().toLocaleString('pt-BR'), false);
       todosRegistros     = dados.map(d => ({...d, diasEspera: Number(d.diasEspera)})).filter(d => !isNaN(d.diasEspera));
       registrosFiltrados = todosRegistros;
+
+      // ── Atualiza memória de regulados ──
+      const { novasDeteccoes } = atualizarMemoriaReguladoss(todosRegistros);
+      renderizarReguladosTabela();
+      if (novasDeteccoes > 0) {
+        setStatus(
+          `Atualizado em: ${new Date().toLocaleString('pt-BR')} — ${novasDeteccoes} nova(s) saída(s) detectada(s)!`,
+          false
+        );
+      }
+
       aplicarFiltroDash();
     }
 
@@ -1904,6 +2076,137 @@
       if (!str) return '—';
       const [y,m,d] = str.split('-');
       return `${d}/${m}/${y}`;
+    }
+
+    // =============================================
+    // MEMÓRIA DE REGULADOS (localStorage)
+    // =============================================
+    const SNAPSHOT_KEY  = 'fila_snapshot_v1';
+    const REMOVIDOS_KEY = 'fila_regulados_v1';
+
+    /**
+     * Compara lista atual com snapshot anterior.
+     * Registra quem saiu, mantém histórico de 30 dias.
+     * Retorna array de removidos ordenado pela data mais recente.
+     */
+    function atualizarMemoriaReguladoss(dadosAtuais) {
+      const hoje     = new Date().toISOString().split('T')[0];
+      const limite30 = new Date();
+      limite30.setDate(limite30.getDate() - 30);
+      const limite30Str = limite30.toISOString().split('T')[0];
+
+      // ── Carrega dados salvos ──
+      let snapshotAnterior = {};
+      let historico        = [];
+      try { snapshotAnterior = JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || '{}'); } catch(e) {}
+      try { historico        = JSON.parse(localStorage.getItem(REMOVIDOS_KEY) || '[]'); } catch(e) {}
+
+      // ── Monta mapa dos registros atuais ──
+      const mapaAtual = {};
+      dadosAtuais.forEach(r => {
+        if (!r.codSolicitacao || !r.codSolicitacao.trim()) return;
+        mapaAtual[r.codSolicitacao.trim()] = {
+          paciente:        r.paciente        || '—',
+          procedimento:    r.procedimento    || '—',
+          diasEspera:      r.diasEspera      || 0,
+          dataSolicitacao: r.dataSolicitacao || '',
+          corRisco:        r.corRisco        || ''
+        };
+      });
+
+      // ── Detecta novos removidos ──
+      // (estava no snapshot anterior, não está mais no atual)
+      const jaRegistrados = new Set(historico.map(r => r.codSolicitacao));
+      let novasDeteccoes  = 0;
+
+      Object.entries(snapshotAnterior).forEach(([cod, info]) => {
+        if (!mapaAtual[cod] && !jaRegistrados.has(cod)) {
+          historico.push({ codSolicitacao: cod, ...info, detectadoEm: hoje });
+          novasDeteccoes++;
+        }
+      });
+
+      // ── Expira registros com mais de 30 dias ──
+      historico = historico.filter(r => (r.detectadoEm || '') >= limite30Str);
+
+      // ── Persiste novo snapshot + histórico ──
+      try {
+        localStorage.setItem(SNAPSHOT_KEY,  JSON.stringify(mapaAtual));
+        localStorage.setItem(REMOVIDOS_KEY, JSON.stringify(historico));
+      } catch(e) { console.warn('localStorage cheio:', e); }
+
+      return { historico, novasDeteccoes };
+    }
+
+    function renderizarReguladosTabela() {
+      let historico = [];
+      try { historico = JSON.parse(localStorage.getItem(REMOVIDOS_KEY) || '[]'); } catch(e) {}
+
+      // Ordena do mais recente para o mais antigo
+      historico.sort((a, b) => (b.detectadoEm||'').localeCompare(a.detectadoEm||''));
+
+      // Filtro de busca
+      const termo = (document.getElementById('reguladosSearch')?.value || '').toLowerCase();
+      if (termo) {
+        historico = historico.filter(r =>
+          (r.paciente||'').toLowerCase().includes(termo) ||
+          (r.procedimento||'').toLowerCase().includes(termo) ||
+          (r.codSolicitacao||'').toLowerCase().includes(termo)
+        );
+      }
+
+      const badge  = document.getElementById('reguladosBadge');
+      const tbody  = document.getElementById('reguladosBody');
+      const aviso  = document.getElementById('reguladosAviso');
+      if (!tbody) return;
+
+      // Atualiza badge
+      let totalHist = [];
+      try { totalHist = JSON.parse(localStorage.getItem(REMOVIDOS_KEY) || '[]'); } catch(e) {}
+      if (badge) {
+        const n = totalHist.length;
+        badge.textContent = n === 0 ? 'Nenhuma saída detectada ainda'
+          : n === 1 ? '1 saída detectada (30 dias)' : `${n} saídas detectadas (30 dias)`;
+        badge.className = 'regulados-badge' + (n > 0 ? '' : ' regulados-badge-warn');
+      }
+
+      // Esconde aviso após primeiro uso com dados
+      if (aviso && totalHist.length > 0) aviso.style.display = 'none';
+
+      if (!historico.length) {
+        tbody.innerHTML = `<tr><td class="reg-empty" colspan="6">${
+          termo ? 'Nenhum resultado para "' + termo + '".'
+                : 'Nenhuma saída detectada ainda. As saídas aparecem aqui após o segundo carregamento dos dados.'
+        }</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      historico.forEach(r => {
+        const cor     = normalizarCor(r.corRisco);
+        const dotCls  = cor ? `dot dot-${cor}` : 'dot dot-outro';
+        const riscoLabel = cor ? RISCO[cor].label : (r.corRisco || '—');
+        const dCls    = r.diasEspera > 90 ? 'badge-alto' : r.diasEspera > 60 ? 'badge-medio' : 'badge-normal';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.paciente || '—'}</td>
+          <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${truncar(r.procedimento||'—', 50)}</td>
+          <td><span class="${dotCls}"></span>${truncar(riscoLabel, 28)}</td>
+          <td style="text-align:right"><span class="reg-dias-tag ${dCls}">${r.diasEspera ?? '—'}</span></td>
+          <td style="text-align:right">${fmtData(r.dataSolicitacao) || '—'}</td>
+          <td style="text-align:right"><span class="reg-saiu-tag">✓ ${fmtData(r.detectadoEm)}</span></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function limparHistoricoReguladoss() {
+      if (!confirm('Apagar todo o histórico de saídas salvo neste navegador?')) return;
+      localStorage.removeItem(REMOVIDOS_KEY);
+      localStorage.removeItem(SNAPSHOT_KEY);
+      renderizarReguladosTabela();
+      const aviso = document.getElementById('reguladosAviso');
+      if (aviso) aviso.style.display = '';
     }
 
     // =============================================
