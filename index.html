@@ -892,6 +892,24 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+    .btn-toggle-regulados {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, box-shadow .2s;
+      box-shadow: 0 2px 8px rgba(54,120,134,.2);
+    }
+    .btn-toggle-regulados:hover { background: var(--primary-dark); }
+    .btn-toggle-regulados.aberto { background: var(--primary-dark); }
+
     .regulados-search-wrap { position:relative; display:flex; align-items:center; }
     .regulados-search-wrap svg { position:absolute; left:10px; color:var(--text-secondary); pointer-events:none; }
     #reguladosSearch {
@@ -901,7 +919,8 @@
       padding: 7px 12px 7px 34px;
       font-size: .82rem;
       color: var(--text-primary);
-      width: 220px;
+      width: 100%;
+      max-width: 340px;
       outline: none;
       transition: border-color .2s;
     }
@@ -1197,35 +1216,45 @@
               <span id="reguladosBadge" class="regulados-badge">0 saídas detectadas</span>
             </div>
             <div class="regulados-controls">
-              <div class="regulados-search-wrap">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              <button class="btn-toggle-regulados" id="btnToggleReguladoss" onclick="toggleReguladoss()">
+                <svg id="reguladosChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .25s">
+                  <polyline points="6 9 12 15 18 9"/>
                 </svg>
-                <input type="text" id="reguladosSearch" placeholder="Buscar paciente ou procedimento…" oninput="renderizarReguladosTabela()" />
-              </div>
+                Ver tabela
+              </button>
               <button class="btn-limpar-regulados" onclick="limparHistoricoReguladoss()" title="Apagar todo o histórico local">
                 🗑 Limpar histórico
               </button>
             </div>
           </div>
-          <div class="regulados-aviso" id="reguladosAviso">
-            <strong>ℹ️ Como funciona:</strong> a cada carregamento dos dados, o sistema compara a lista atual com o último snapshot salvo neste navegador. Pacientes que constavam anteriormente e não aparecem mais são registrados aqui como <em>possíveis regulados</em>. O histórico cobre os <strong>últimos 30 dias</strong> e é salvo localmente neste dispositivo.
+
+          <!-- Conteúdo colapsável -->
+          <div id="reguladosConteudo" style="display:none">
+            <div class="regulados-aviso" id="reguladosAviso">
+              <strong>ℹ️ Como funciona:</strong> a cada carregamento dos dados, o sistema compara a lista atual com o último snapshot salvo neste navegador. Pacientes que constavam anteriormente e não aparecem mais são registrados aqui como <em>possíveis regulados</em>. O histórico cobre os <strong>últimos 30 dias</strong> e é salvo localmente neste dispositivo.
+            </div>
+            <div class="regulados-search-wrap" style="margin-bottom:14px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input type="text" id="reguladosSearch" placeholder="Buscar paciente ou procedimento…" oninput="renderizarReguladosTabela()" />
+            </div>
+            <table class="reg-table">
+              <thead>
+                <tr>
+                  <th>Paciente</th>
+                  <th>Procedimento</th>
+                  <th>Risco</th>
+                  <th style="text-align:right">Dias em Espera</th>
+                  <th style="text-align:right">Data Solicitação</th>
+                  <th style="text-align:right">Detectado em</th>
+                </tr>
+              </thead>
+              <tbody id="reguladosBody">
+                <tr><td class="reg-empty" colspan="6">Aguardando carregamento dos dados…</td></tr>
+              </tbody>
+            </table>
           </div>
-          <table class="reg-table">
-            <thead>
-              <tr>
-                <th>Paciente</th>
-                <th>Procedimento</th>
-                <th>Risco</th>
-                <th style="text-align:right">Dias em Espera</th>
-                <th style="text-align:right">Data Solicitação</th>
-                <th style="text-align:right">Detectado em</th>
-              </tr>
-            </thead>
-            <tbody id="reguladosBody">
-              <tr><td class="reg-empty" colspan="6">Aguardando carregamento dos dados…</td></tr>
-            </tbody>
-          </table>
         </div>
 
         <div class="charts-grid">
@@ -2198,6 +2227,32 @@
           <td style="text-align:right"><span class="reg-saiu-tag">✓ ${fmtData(r.detectadoEm)}</span></td>`;
         tbody.appendChild(tr);
       });
+    }
+
+    function toggleReguladoss() {
+      const conteudo = document.getElementById('reguladosConteudo');
+      const btn      = document.getElementById('btnToggleReguladoss');
+      const chevron  = document.getElementById('reguladosChevron');
+      const aberto   = conteudo.style.display !== 'none';
+
+      conteudo.style.display = aberto ? 'none' : 'block';
+      chevron.style.transform = aberto ? '' : 'rotate(180deg)';
+      btn.textContent = ''; // limpa para remontar com SVG
+      btn.className   = 'btn-toggle-regulados' + (aberto ? '' : ' aberto');
+
+      // Remonta conteúdo do botão preservando o SVG
+      const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.id = 'reguladosChevron';
+      svg.setAttribute('width','14'); svg.setAttribute('height','14');
+      svg.setAttribute('viewBox','0 0 24 24'); svg.setAttribute('fill','none');
+      svg.setAttribute('stroke','currentColor'); svg.setAttribute('stroke-width','2.5');
+      svg.style.transition = 'transform .25s';
+      svg.style.transform  = aberto ? '' : 'rotate(180deg)';
+      const poly = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+      poly.setAttribute('points','6 9 12 15 18 9');
+      svg.appendChild(poly);
+      btn.appendChild(svg);
+      btn.appendChild(document.createTextNode(aberto ? ' Ver tabela' : ' Ocultar tabela'));
     }
 
     function limparHistoricoReguladoss() {
