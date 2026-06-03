@@ -3809,7 +3809,7 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
           .footer { margin-top:10px; display:flex; justify-content:space-between; font-size:9px; color:#9ca3af; padding-top:8px; border-top:1px solid #e5e7eb; }
           @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
         </style>
-      </head><body>
+      </head><body onload="window.print()">
         <div class="header">${logoHtml}<div><h1>Pacientes Regulados – Saídas da Fila</h1><h2>Prefeitura Municipal de Cuité</h2><p>Gerado em: ${agora}</p></div></div>
         <div class="divider"></div>
         <div class="sec-title">${regulados.length} saída(s) detectada(s) nos últimos 30 dias</div>
@@ -3829,14 +3829,12 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
           <span>Prefeitura Municipal de Cuité – Fila de Regulação Ambulatorial</span>
           <span>Documento gerado em ${agora}</span>
         </div>
-        <script>window.onload = function(){ window.print(); };<\/script>
       </body></html>`;
 
       const win = window.open('', '_blank');
       if (!win) { alert('Permita pop-ups para este site para exportar o PDF.'); return; }
       win.document.write(html);
       win.document.close();
-    }
     }
 
     // =============================================
