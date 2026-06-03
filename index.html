@@ -3854,23 +3854,19 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
         </tr>`;
       }).join('');
 
-      // Posiciona fixo no topo-esquerdo para o html2canvas capturar sem deslocamento
+      // O elemento fica sempre display:none no DOM real.
+      // O onclone faz a cópia interna do html2canvas ficar visível para captura.
       const el = document.getElementById('reguladosParaPdf');
-      el.style.cssText = [
-        'display:block',
-        'position:fixed',
-        'top:0',
-        'left:0',
-        'z-index:99999',
-        'width:1060px',
-        'background:#fff',
-        'font-family:"Roboto","Helvetica Neue",Arial,sans-serif',
-        'color:#1a3a42',
-        'overflow:visible'
-      ].join(';');
 
-      // Dois frames garantem que o browser terminou de pintar antes de capturar
-      requestAnimationFrame(() => requestAnimationFrame(() => {
+      const restoreBtn = () => {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9,15 12,18 15,15"/>
+        </svg> Exportar PDF`;
+      };
+
+      try {
         html2pdf().set({
           margin:      [0, 0, 0, 0],
           filename:    `pacientes-regulados-${new Date().toISOString().split('T')[0]}.pdf`,
@@ -3880,23 +3876,16 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
             backgroundColor: '#ffffff',
             useCORS:         true,
             logging:         false,
-            x:               0,
-            y:               0,
-            scrollX:         0,
-            scrollY:         0,
-            windowWidth:     1060
+            windowWidth:     1060,
+            onclone: (clonedDoc) => {
+              const clonedEl = clonedDoc.getElementById('reguladosParaPdf');
+              clonedEl.style.cssText = 'display:block;width:1060px;position:relative;background:#fff;font-family:"Roboto","Helvetica Neue",Arial,sans-serif;color:#1a3a42;';
+            }
           },
           jsPDF:     { unit: 'mm', format: 'a4', orientation: 'landscape' },
           pagebreak: { mode: ['css', 'legacy'] }
-        }).from(el).save().then(() => {
-          el.style.cssText = 'display:none';
-          btn.disabled = false;
-          btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9,15 12,18 15,15"/>
-          </svg> Exportar PDF`;
-        });
-      }));
+        }).from(el).save().then(restoreBtn).catch(err => { console.error(err); restoreBtn(); });
+      } catch(err) { console.error(err); restoreBtn(); }
     }
 
     // =============================================
@@ -4015,28 +4004,33 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
       }
 
       // ── Exporta ──
-      const el  = document.getElementById('dashParaPdf');
-      el.style.cssText = 'display:block;position:fixed;top:0;left:0;z-index:99999;width:900px;background:#fff;overflow:visible;';
-
+      const el        = document.getElementById('dashParaPdf');
       const dataLabel = ini && fim ? `${ini}-a-${fim}` : new Date().toISOString().split('T')[0];
 
-      requestAnimationFrame(() => requestAnimationFrame(() => {
+      const restoreDashBtn = () => {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9,15 12,18 15,15"/>
+        </svg> Exportar PDF`;
+      };
+
+      try {
         html2pdf().set({
           margin:      [0, 0, 0, 0],
           filename:    `gestao-fila-${dataLabel}.pdf`,
           image:       { type:'jpeg', quality:0.97 },
-          html2canvas: { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false, x:0, y:0, scrollX:0, scrollY:0, windowWidth:900 },
-          jsPDF:       { unit:'mm', format:'a4', orientation:'portrait' },
-          pagebreak:   { mode:['css','legacy'], avoid:'.pdf-section' }
-        }).from(el).save().then(() => {
-          el.style.cssText = 'display:none;';
-          btn.disabled = false;
-          btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9,15 12,18 15,15"/>
-          </svg> Exportar PDF`;
-        });
-      }));
+          html2canvas: {
+            scale: 2, backgroundColor:'#ffffff', useCORS:true, logging:false, windowWidth:900,
+            onclone: (clonedDoc) => {
+              const c = clonedDoc.getElementById('dashParaPdf');
+              c.style.cssText = 'display:block;width:900px;position:relative;background:#fff;';
+            }
+          },
+          jsPDF:     { unit:'mm', format:'a4', orientation:'portrait' },
+          pagebreak: { mode:['css','legacy'], avoid:'.pdf-section' }
+        }).from(el).save().then(restoreDashBtn).catch(err => { console.error(err); restoreDashBtn(); });
+      } catch(err) { console.error(err); restoreDashBtn(); }
     }
 
     // =============================================
