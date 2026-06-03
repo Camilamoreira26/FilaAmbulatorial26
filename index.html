@@ -2362,29 +2362,26 @@
       return { historico, novasDeteccoes };
     }
 
+    let reguladoSelecionado = null; // índice da linha expandida
+
     function renderizarReguladosTabela() {
       let historico = [];
       try { historico = JSON.parse(localStorage.getItem(REMOVIDOS_KEY) || '[]'); } catch(e) {}
-
-      // Ordena do mais recente para o mais antigo
       historico.sort((a, b) => (b.detectadoEm||'').localeCompare(a.detectadoEm||''));
 
-      // Filtro de busca
       const termo = (document.getElementById('reguladosSearch')?.value || '').toLowerCase();
       if (termo) {
         historico = historico.filter(r =>
           (r.paciente||'').toLowerCase().includes(termo) ||
-          (r.procedimento||'').toLowerCase().includes(termo) ||
-          (r.codSolicitacao||'').toLowerCase().includes(termo)
+          (r.procedimento||'').toLowerCase().includes(termo)
         );
       }
 
-      const badge  = document.getElementById('reguladosBadge');
-      const tbody  = document.getElementById('reguladosBody');
-      const aviso  = document.getElementById('reguladosAviso');
+      const badge = document.getElementById('reguladosBadge');
+      const tbody = document.getElementById('reguladosBody');
+      const aviso = document.getElementById('reguladosAviso');
       if (!tbody) return;
 
-      // Atualiza badge
       let totalHist = [];
       try { totalHist = JSON.parse(localStorage.getItem(REMOVIDOS_KEY) || '[]'); } catch(e) {}
       if (badge) {
@@ -2393,8 +2390,6 @@
           : n === 1 ? '1 saída detectada (30 dias)' : `${n} saídas detectadas (30 dias)`;
         badge.className = 'regulados-badge' + (n > 0 ? '' : ' regulados-badge-warn');
       }
-
-      // Esconde aviso após primeiro uso com dados
       if (aviso && totalHist.length > 0) aviso.style.display = 'none';
 
       if (!historico.length) {
@@ -2406,21 +2401,99 @@
       }
 
       tbody.innerHTML = '';
-      historico.forEach(r => {
-        const cor     = normalizarCor(r.corRisco);
-        const dotCls  = cor ? `dot dot-${cor}` : 'dot dot-outro';
+      historico.forEach((r, idx) => {
+        const cor        = normalizarCor(r.corRisco);
+        const dotCls     = cor ? `dot dot-${cor}` : 'dot dot-outro';
         const riscoLabel = cor ? RISCO[cor].label : (r.corRisco || '—');
-        const dCls    = r.diasEspera > 90 ? 'badge-alto' : r.diasEspera > 60 ? 'badge-medio' : 'badge-normal';
+        const dCls       = r.diasEspera > 90 ? 'badge-alto' : r.diasEspera > 60 ? 'badge-medio' : 'badge-normal';
+        const sel        = reguladoSelecionado === idx;
+
+        // ── Cruzamento com fila atual ──
+        const filaAtual     = todosRegistros.filter(x => x.procedimento === r.procedimento);
+        const maisAntigos   = filaAtual.filter(x => x.diasEspera > (r.diasEspera||0));
+        const temIrregular  = maisAntigos.length > 0;
+
+        // Badge de alerta na linha
+        const alertaBadge = temIrregular
+          ? `<span title="${maisAntigos.length} paciente(s) na fila atual esperando mais que este" style="margin-left:6px;background:#fee2e2;color:#DC2626;font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:10px;cursor:pointer;">⚠️ ${maisAntigos.length} na frente</span>`
+          : `<span style="margin-left:6px;background:#d1fae5;color:#059669;font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:10px;">✓ OK</span>`;
 
         const tr = document.createElement('tr');
+        tr.className = 'row-paciente' + (sel ? ' row-selecionado' : '');
+        tr.style.cursor = 'pointer';
         tr.innerHTML = `
-          <td>${r.paciente || '—'}</td>
-          <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${truncar(r.procedimento||'—', 50)}</td>
-          <td><span class="${dotCls}"></span>${truncar(riscoLabel, 28)}</td>
+          <td>
+            <span style="display:inline-flex;align-items:center;gap:5px;">
+              <span style="font-size:.72rem;color:var(--primary);display:inline-block;transform:${sel?'rotate(90deg)':'rotate(0)'};transition:transform .2s">▶</span>
+              <strong style="color:var(--primary)">${r.paciente || '—'}</strong>
+            </span>
+            ${alertaBadge}
+          </td>
+          <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${truncar(r.procedimento||'—', 48)}</td>
+          <td><span class="${dotCls}"></span>${truncar(riscoLabel, 26)}</td>
           <td style="text-align:right"><span class="reg-dias-tag ${dCls}">${r.diasEspera ?? '—'}</span></td>
           <td style="text-align:right">${fmtData(r.dataSolicitacao) || '—'}</td>
           <td style="text-align:right"><span class="reg-saiu-tag">✓ ${fmtData(r.detectadoEm)}</span></td>`;
+        tr.onclick = () => { reguladoSelecionado = sel ? null : idx; renderizarReguladosTabela(); };
         tbody.appendChild(tr);
+
+        // ── Linha de detalhes expandida ──
+        if (sel) {
+          const totalFila   = filaAtual.length;
+          const maisNovos   = filaAtual.filter(x => x.diasEspera < (r.diasEspera||0));
+
+          let mensagem, corMensagem;
+          if (maisAntigos.length === 0 && totalFila === 0) {
+            mensagem   = `Nenhum paciente aguarda <strong>${r.procedimento}</strong> na fila atual.`;
+            corMensagem = 'var(--text-secondary)';
+          } else if (maisAntigos.length === 0) {
+            mensagem   = `✅ <strong>${r.paciente}</strong> saiu com o maior tempo de espera para <strong>${truncar(r.procedimento,40)}</strong>. Nenhum paciente da fila atual aguardava mais — atendimento dentro da ordem.`;
+            corMensagem = 'var(--risco-verde)';
+          } else {
+            mensagem   = `⚠️ <strong>${maisAntigos.length} paciente(s)</strong> ainda na fila aguardam há mais tempo que <strong>${r.paciente}</strong> (${r.diasEspera} dias) pelo mesmo procedimento. Isso pode indicar que este paciente foi atendido fora da ordem cronológica.`;
+            corMensagem = '#DC2626';
+          }
+
+          // Lista dos que aguardam mais (máx 5)
+          const listaHTML = maisAntigos.length > 0
+            ? `<div style="margin-top:10px;font-size:.78rem;color:var(--text-secondary);">
+                <strong style="color:var(--primary)">Pacientes ainda na fila aguardando mais tempo:</strong>
+                <ul style="margin:6px 0 0 16px;display:flex;flex-direction:column;gap:3px;">
+                  ${maisAntigos.sort((a,b)=>b.diasEspera-a.diasEspera).slice(0,5).map(p =>
+                    `<li><strong>${p.paciente}</strong> — <span style="color:#DC2626;font-weight:700">${p.diasEspera} dias</span> (sol. ${fmtData(p.dataSolicitacao)})</li>`
+                  ).join('')}
+                  ${maisAntigos.length > 5 ? `<li style="color:var(--text-secondary)">… e mais ${maisAntigos.length-5} paciente(s)</li>` : ''}
+                </ul>
+              </div>` : '';
+
+          const trDet = document.createElement('tr');
+          trDet.className = 'fila-detail-row';
+          trDet.innerHTML = `<td colspan="6">
+            <div class="fila-detail-inner">
+              <div class="fila-stat-box">
+                <div class="fval" style="color:${maisAntigos.length>0?'#DC2626':'var(--risco-verde)'}">${maisAntigos.length}</div>
+                <div class="flbl">Aguardavam mais tempo</div>
+              </div>
+              <div class="fila-stat-box">
+                <div class="fval">${totalFila}</div>
+                <div class="flbl">Na fila atualmente</div>
+              </div>
+              <div class="fila-stat-box">
+                <div class="fval ok">${maisNovos.length}</div>
+                <div class="flbl">Aguardavam menos</div>
+              </div>
+              <div class="fila-stat-box">
+                <div class="fval" style="color:var(--primary)">${r.diasEspera ?? '—'}</div>
+                <div class="flbl">Dias que esperou</div>
+              </div>
+              <div class="fila-detail-msg" style="border-left:3px solid ${corMensagem}">
+                ${mensagem}
+                ${listaHTML}
+              </div>
+            </div>
+          </td>`;
+          tbody.appendChild(trDet);
+        }
       });
     }
 
