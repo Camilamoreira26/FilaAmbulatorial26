@@ -1890,58 +1890,6 @@
   </div><!-- fim dashboardScreen -->
 
   <!-- ══════════════════════════════════
-       DIV OCULTO – PDF REGULADOS
-  ══════════════════════════════════ -->
-  <div id="reguladosParaPdf" style="display:none; width:1060px; background:#fff; font-family:'Roboto','Helvetica Neue',Arial,sans-serif; color:#1a3a42;">
-    <!-- Cabeçalho -->
-    <div style="background:linear-gradient(135deg,#367886 0%,#2a5e6b 100%);padding:22px 28px;display:flex;align-items:center;gap:18px;">
-      <div id="pdfRegLogoWrap"></div>
-      <div>
-        <h1 style="font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:3px;">Pacientes Regulados – Saídas da Fila</h1>
-        <h2 style="font-size:.88rem;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:4px;">Prefeitura Municipal de Cuité</h2>
-        <p id="pdfRegData" style="font-size:.73rem;color:rgba(255,255,255,.7);">Gerado em: —</p>
-      </div>
-    </div>
-    <div style="height:4px;background:linear-gradient(90deg,#DC2626 0%,#F87171 100%);"></div>
-
-    <!-- Tabela -->
-    <div style="margin:16px 20px;">
-      <div style="background:linear-gradient(90deg,#047857 0%,#10B981 100%);color:#fff;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:8px 12px;border-radius:5px 5px 0 0;" id="pdfRegSecHeader">Saídas detectadas nos últimos 30 dias</div>
-      <div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 5px 5px;overflow:hidden;">
-        <table style="width:100%;border-collapse:collapse;font-size:.75rem;table-layout:fixed;">
-          <colgroup>
-            <col style="width:3%">   <!-- # -->
-            <col style="width:21%">  <!-- Paciente -->
-            <col style="width:27%">  <!-- Procedimento -->
-            <col style="width:17%">  <!-- Risco -->
-            <col style="width:8%">   <!-- Dias -->
-            <col style="width:12%">  <!-- Solicitação -->
-            <col style="width:12%">  <!-- Detectado -->
-          </colgroup>
-          <thead>
-            <tr>
-              <th style="background:#bcdde1;color:#367886;text-align:left;padding:8px 8px;font-weight:700;font-size:.68rem;text-transform:uppercase;">#</th>
-              <th style="background:#bcdde1;color:#367886;text-align:left;padding:8px 8px;font-weight:700;font-size:.68rem;text-transform:uppercase;">Paciente</th>
-              <th style="background:#bcdde1;color:#367886;text-align:left;padding:8px 8px;font-weight:700;font-size:.68rem;text-transform:uppercase;">Procedimento</th>
-              <th style="background:#bcdde1;color:#367886;text-align:left;padding:8px 8px;font-weight:700;font-size:.68rem;text-transform:uppercase;">Risco</th>
-              <th style="background:#bcdde1;color:#367886;text-align:right;padding:8px 8px;font-weight:700;font-size:.68rem;text-transform:uppercase;">Dias</th>
-              <th style="background:#bcdde1;color:#367886;text-align:right;padding:8px 8px;font-weight:700;font-size:.68rem;text-transform:uppercase;">Solicitação</th>
-              <th style="background:#bcdde1;color:#367886;text-align:right;padding:8px 8px;font-weight:700;font-size:.68rem;text-transform:uppercase;">Detectado</th>
-            </tr>
-          </thead>
-          <tbody id="pdfRegBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Rodapé -->
-    <div style="margin:4px 20px 16px;padding-top:10px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;">
-      <span style="font-size:.65rem;color:#9ca3af;">Prefeitura Municipal de Cuité – Fila de Regulação Ambulatorial</span>
-      <span id="pdfRegRodape" style="font-size:.65rem;color:#9ca3af;"></span>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════
        DIV OCULTO – PDF DO DASHBOARD
   ══════════════════════════════════ -->
   <div id="dashParaPdf" style="display:none; width:900px;">
@@ -3805,7 +3753,7 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
     }
 
     // =============================================
-    // EXPORTAR PDF – REGULADOS
+    // EXPORTAR PDF – REGULADOS (janela de impressão)
     // =============================================
     function gerarPdfReguladoss() {
       let regulados = [];
@@ -3814,78 +3762,81 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
 
       if (!regulados.length) { alert('Nenhuma saída detectada para exportar.'); return; }
 
-      const btn   = document.getElementById('btnPdfReguladoss');
-      btn.disabled = true;
-      btn.textContent = 'Gerando…';
+      const agora        = new Date().toLocaleString('pt-BR');
+      const riscoCores   = { vermelho:'#DC2626', amarelo:'#D97706', verde:'#059669', azul:'#2563EB' };
+      const riscoLabels  = { vermelho:'Prioridade Zero – Emergência', amarelo:'Prioridade 1 – Urgência', verde:'Prioridade 2 – Não urgente', azul:'Prioridade 3 – Eletivo' };
 
-      const agora = new Date().toLocaleString('pt-BR');
-
-      // Logo
-      document.getElementById('pdfRegLogoWrap').innerHTML = LOGO_URL
-        ? `<img src="${LOGO_URL}" class="pdf-header-logo" alt="Logo" />`
-        : `<div class="pdf-header-logo-placeholder">🏥</div>`;
-
-      document.getElementById('pdfRegData').textContent    = `Gerado em: ${agora}`;
-      document.getElementById('pdfRegRodape').textContent  = `Documento gerado em ${agora}`;
-      document.getElementById('pdfRegSecHeader').textContent = `${regulados.length} saída(s) detectada(s) nos últimos 30 dias`;
-
-      // Cores de risco para PDF
-      const riscoCoresPdf = { vermelho:'#DC2626', amarelo:'#D97706', verde:'#059669', azul:'#2563EB' };
-
-      const cellBase = 'padding:6px 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;';
-      document.getElementById('pdfRegBody').innerHTML = regulados.map((r, i) => {
+      const linhas = regulados.map((r, i) => {
         const cor    = normalizarCor(r.corRisco);
-        const corHex = cor ? riscoCoresPdf[cor] : '#9ca3af';
-        const label  = cor ? RISCO[cor].label : (r.corRisco || '—');
+        const corHex = cor ? riscoCores[cor] : '#9ca3af';
+        const label  = cor ? riscoLabels[cor] : (r.corRisco || '—');
         const dCor   = r.diasEspera > 90 ? '#DC2626' : r.diasEspera > 60 ? '#D97706' : '#059669';
-        const zebra  = i % 2 === 0 ? '#ffffff' : '#f0fafb';
-        return `<tr style="background:${zebra};border-bottom:1px solid #e5e7eb;">
-          <td style="${cellBase}color:#9ca3af;font-size:.7rem;">${i+1}</td>
-          <td style="${cellBase}color:#1a3a42;font-weight:500;font-size:.74rem;">${r.paciente||'—'}</td>
-          <td style="${cellBase}color:#374151;font-size:.73rem;">${truncar(r.procedimento||'—', 48)}</td>
-          <td style="${cellBase}font-size:.72rem;">
-            <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${corHex};margin-right:3px;vertical-align:middle;flex-shrink:0;"></span><span style="color:${corHex};font-weight:600;">${truncar(label,24)}</span>
-          </td>
-          <td style="${cellBase}text-align:right;color:${dCor};font-weight:700;font-size:.74rem;">${r.diasEspera??'—'}</td>
-          <td style="${cellBase}text-align:right;color:#374151;font-size:.73rem;">${fmtData(r.dataSolicitacao)||'—'}</td>
-          <td style="${cellBase}text-align:right;">
-            <span style="background:#d1fae5;color:#059669;font-size:.68rem;font-weight:700;padding:2px 6px;border-radius:8px;white-space:nowrap;">✓ ${fmtData(r.detectadoEm)||'—'}</span>
-          </td>
+        const zebra  = i % 2 === 0 ? '#fff' : '#f0fafb';
+        return `<tr style="background:${zebra}">
+          <td class="c">${i+1}</td>
+          <td>${r.paciente||'—'}</td>
+          <td>${r.procedimento||'—'}</td>
+          <td><span class="dot" style="background:${corHex}"></span><span style="color:${corHex};font-weight:600">${label}</span></td>
+          <td class="r" style="color:${dCor};font-weight:700">${r.diasEspera??'—'}</td>
+          <td class="r">${fmtData(r.dataSolicitacao)||'—'}</td>
+          <td class="r"><span class="tag">${fmtData(r.detectadoEm)||'—'}</span></td>
         </tr>`;
       }).join('');
 
-      // O elemento fica sempre display:none no DOM real.
-      // O onclone faz a cópia interna do html2canvas ficar visível para captura.
-      const el = document.getElementById('reguladosParaPdf');
+      const logoHtml = LOGO_URL ? `<img src="${LOGO_URL}" style="height:56px;width:auto;object-fit:contain;background:#fff;border-radius:6px;padding:4px;" />` : '🏥';
 
-      const restoreBtn = () => {
-        btn.disabled = false;
-        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9,15 12,18 15,15"/>
-        </svg> Exportar PDF`;
-      };
+      const html = `<!DOCTYPE html><html lang="pt-BR"><head>
+        <meta charset="UTF-8">
+        <title>Pacientes Regulados – ${new Date().toLocaleDateString('pt-BR')}</title>
+        <style>
+          * { box-sizing:border-box; margin:0; padding:0; }
+          @page { size: A4 landscape; margin: 8mm 10mm; }
+          body { font-family: Arial, sans-serif; font-size: 11px; color: #1a3a42; background:#fff; }
+          .header { background: linear-gradient(135deg,#367886,#2a5e6b); color:#fff; padding:16px 20px; display:flex; align-items:center; gap:16px; }
+          .header h1 { font-size:16px; font-weight:800; margin-bottom:3px; }
+          .header h2 { font-size:12px; font-weight:500; opacity:.85; margin-bottom:3px; }
+          .header p  { font-size:10px; opacity:.7; }
+          .divider   { height:4px; background:linear-gradient(90deg,#DC2626,#F87171); }
+          .sec-title { background:linear-gradient(90deg,#047857,#10B981); color:#fff; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; padding:7px 12px; margin:14px 0 0; border-radius:4px 4px 0 0; }
+          table { width:100%; border-collapse:collapse; border:1px solid #e5e7eb; border-top:none; border-radius:0 0 4px 4px; }
+          thead th { background:#bcdde1; color:#367886; font-size:9.5px; font-weight:700; text-transform:uppercase; padding:7px 8px; text-align:left; white-space:nowrap; }
+          tbody tr { border-bottom:1px solid #e5e7eb; }
+          tbody td { padding:6px 8px; font-size:10.5px; vertical-align:middle; }
+          .c { text-align:center; color:#9ca3af; font-size:9px; }
+          .r { text-align:right; }
+          .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:4px; vertical-align:middle; }
+          .tag { background:#d1fae5; color:#059669; font-weight:700; font-size:9.5px; padding:2px 7px; border-radius:8px; white-space:nowrap; }
+          .footer { margin-top:10px; display:flex; justify-content:space-between; font-size:9px; color:#9ca3af; padding-top:8px; border-top:1px solid #e5e7eb; }
+          @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+        </style>
+      </head><body>
+        <div class="header">${logoHtml}<div><h1>Pacientes Regulados – Saídas da Fila</h1><h2>Prefeitura Municipal de Cuité</h2><p>Gerado em: ${agora}</p></div></div>
+        <div class="divider"></div>
+        <div class="sec-title">${regulados.length} saída(s) detectada(s) nos últimos 30 dias</div>
+        <table>
+          <thead><tr>
+            <th style="width:3%">#</th>
+            <th style="width:22%">Paciente</th>
+            <th style="width:27%">Procedimento</th>
+            <th style="width:18%">Risco</th>
+            <th style="width:7%;text-align:right">Dias</th>
+            <th style="width:11%;text-align:right">Solicitação</th>
+            <th style="width:12%;text-align:right">Detectado em</th>
+          </tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+        <div class="footer">
+          <span>Prefeitura Municipal de Cuité – Fila de Regulação Ambulatorial</span>
+          <span>Documento gerado em ${agora}</span>
+        </div>
+        <script>window.onload = function(){ window.print(); };<\/script>
+      </body></html>`;
 
-      try {
-        html2pdf().set({
-          margin:      [0, 0, 0, 0],
-          filename:    `pacientes-regulados-${new Date().toISOString().split('T')[0]}.pdf`,
-          image:       { type: 'jpeg', quality: 0.97 },
-          html2canvas: {
-            scale:           2,
-            backgroundColor: '#ffffff',
-            useCORS:         true,
-            logging:         false,
-            windowWidth:     1060,
-            onclone: (clonedDoc) => {
-              const clonedEl = clonedDoc.getElementById('reguladosParaPdf');
-              clonedEl.style.cssText = 'display:block;width:1060px;position:relative;background:#fff;font-family:"Roboto","Helvetica Neue",Arial,sans-serif;color:#1a3a42;';
-            }
-          },
-          jsPDF:     { unit: 'mm', format: 'a4', orientation: 'landscape' },
-          pagebreak: { mode: ['css', 'legacy'] }
-        }).from(el).save().then(restoreBtn).catch(err => { console.error(err); restoreBtn(); });
-      } catch(err) { console.error(err); restoreBtn(); }
+      const win = window.open('', '_blank');
+      if (!win) { alert('Permita pop-ups para este site para exportar o PDF.'); return; }
+      win.document.write(html);
+      win.document.close();
+    }
     }
 
     // =============================================
