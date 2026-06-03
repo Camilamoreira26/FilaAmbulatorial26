@@ -1120,6 +1120,13 @@
           <button class="btn-refresh" id="btnRefresh" onclick="carregarDados()">
             ⟳ Atualizar dados
           </button>
+          <button class="btn-pdf" id="btnPdfDash" onclick="gerarPdfDashboard()" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9,15 12,18 15,15"/>
+            </svg>
+            Exportar PDF
+          </button>
           <span id="status">Aguardando dados…</span>
         </div>
 
@@ -1221,6 +1228,13 @@
                   <polyline points="6 9 12 15 18 9"/>
                 </svg>
                 Ver tabela
+              </button>
+              <button class="btn-pdf" id="btnPdfReguladoss" onclick="gerarPdfReguladoss()" style="padding:7px 16px;font-size:.82rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9,15 12,18 15,15"/>
+                </svg>
+                Exportar PDF
               </button>
               <button class="btn-limpar-regulados" onclick="limparHistoricoReguladoss()" title="Apagar todo o histórico local">
                 🗑 Limpar histórico
@@ -1875,6 +1889,126 @@
 
   </div><!-- fim dashboardScreen -->
 
+  <!-- ══════════════════════════════════
+       DIV OCULTO – PDF REGULADOS
+  ══════════════════════════════════ -->
+  <div id="reguladosParaPdf" style="display:none; position:absolute; left:-9999px; top:0; width:900px; background:#fff; font-family:'Roboto','Helvetica Neue',Arial,sans-serif;">
+    <div class="pdf-header">
+      <div id="pdfRegLogoWrap"></div>
+      <div class="pdf-header-info">
+        <h1>Pacientes Regulados – Saídas da Fila</h1>
+        <h2>Prefeitura Municipal de Cuité</h2>
+        <p id="pdfRegData">Gerado em: —</p>
+      </div>
+    </div>
+    <div class="pdf-divider"></div>
+    <div class="pdf-section">
+      <div class="pdf-section-header" id="pdfRegSecHeader">Saídas detectadas nos últimos 30 dias</div>
+      <div class="pdf-section-body" style="padding:0">
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+          <thead>
+            <tr>
+              <th style="background:#bcdde1;color:#367886;text-align:left;padding:9px 14px;font-weight:700;font-size:.73rem;text-transform:uppercase;letter-spacing:.5px;">#</th>
+              <th style="background:#bcdde1;color:#367886;text-align:left;padding:9px 14px;font-weight:700;font-size:.73rem;text-transform:uppercase;letter-spacing:.5px;">Paciente</th>
+              <th style="background:#bcdde1;color:#367886;text-align:left;padding:9px 14px;font-weight:700;font-size:.73rem;text-transform:uppercase;letter-spacing:.5px;">Procedimento</th>
+              <th style="background:#bcdde1;color:#367886;text-align:center;padding:9px 14px;font-weight:700;font-size:.73rem;text-transform:uppercase;letter-spacing:.5px;">Risco</th>
+              <th style="background:#bcdde1;color:#367886;text-align:right;padding:9px 14px;font-weight:700;font-size:.73rem;text-transform:uppercase;letter-spacing:.5px;">Dias em Espera</th>
+              <th style="background:#bcdde1;color:#367886;text-align:right;padding:9px 14px;font-weight:700;font-size:.73rem;text-transform:uppercase;letter-spacing:.5px;">Data Solicitação</th>
+              <th style="background:#bcdde1;color:#367886;text-align:right;padding:9px 14px;font-weight:700;font-size:.73rem;text-transform:uppercase;letter-spacing:.5px;">Detectado em</th>
+            </tr>
+          </thead>
+          <tbody id="pdfRegBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="pdf-footer">
+      <span>Prefeitura Municipal de Cuité – Fila de Regulação Ambulatorial</span>
+      <span id="pdfRegRodape"></span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       DIV OCULTO – PDF DO DASHBOARD
+  ══════════════════════════════════ -->
+  <div id="dashParaPdf" style="display:none; position:absolute; left:-9999px; top:0; width:900px;">
+    <!-- Cabeçalho -->
+    <div class="pdf-header">
+      <div id="pdfDashLogoWrap"></div>
+      <div class="pdf-header-info">
+        <h1>Relatório de Gestão da Fila de Regulação</h1>
+        <h2>Prefeitura Municipal de Cuité</h2>
+        <p id="pdfDashPeriodo">Gerado em: —</p>
+      </div>
+    </div>
+    <div class="pdf-divider"></div>
+
+    <!-- Indicadores gerais -->
+    <div class="pdf-section">
+      <div class="pdf-section-header">Indicadores Gerais</div>
+      <div class="pdf-section-body">
+        <div id="pdfDashKpisGeral" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;"></div>
+      </div>
+    </div>
+
+    <!-- Distribuição por risco -->
+    <div class="pdf-section">
+      <div class="pdf-section-header">Distribuição por Nível de Risco</div>
+      <div class="pdf-section-body">
+        <div id="pdfDashKpisRisco" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;"></div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="pdf-section">
+      <div class="pdf-section-header">Gráficos</div>
+      <div class="pdf-section-body">
+        <div id="pdfDashGraficos" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;"></div>
+      </div>
+    </div>
+
+    <!-- Top procedimentos -->
+    <div class="pdf-section">
+      <div class="pdf-section-header">Top 10 Procedimentos – Pacientes em Fila</div>
+      <div class="pdf-section-body" style="padding:0">
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+          <thead>
+            <tr>
+              <th style="background:#bcdde1;color:#367886;text-align:left;padding:9px 14px;font-weight:700;font-size:.74rem;text-transform:uppercase;letter-spacing:.5px;">#</th>
+              <th style="background:#bcdde1;color:#367886;text-align:left;padding:9px 14px;font-weight:700;font-size:.74rem;text-transform:uppercase;letter-spacing:.5px;">Procedimento</th>
+              <th style="background:#bcdde1;color:#367886;text-align:right;padding:9px 14px;font-weight:700;font-size:.74rem;text-transform:uppercase;letter-spacing:.5px;">Qtde em Fila</th>
+              <th style="background:#bcdde1;color:#367886;text-align:right;padding:9px 14px;font-weight:700;font-size:.74rem;text-transform:uppercase;letter-spacing:.5px;">Tempo Médio (dias)</th>
+            </tr>
+          </thead>
+          <tbody id="pdfDashTabelaProc"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Regulados -->
+    <div class="pdf-section" id="pdfDashRegSection">
+      <div class="pdf-section-header">Pacientes Regulados – Últimos 30 dias</div>
+      <div class="pdf-section-body" style="padding:0">
+        <table style="width:100%;border-collapse:collapse;font-size:.81rem;">
+          <thead>
+            <tr>
+              <th style="background:#bcdde1;color:#367886;text-align:left;padding:8px 12px;font-weight:700;font-size:.73rem;text-transform:uppercase;">Paciente</th>
+              <th style="background:#bcdde1;color:#367886;text-align:left;padding:8px 12px;font-weight:700;font-size:.73rem;text-transform:uppercase;">Procedimento</th>
+              <th style="background:#bcdde1;color:#367886;text-align:right;padding:8px 12px;font-weight:700;font-size:.73rem;text-transform:uppercase;">Dias em Espera</th>
+              <th style="background:#bcdde1;color:#367886;text-align:right;padding:8px 12px;font-weight:700;font-size:.73rem;text-transform:uppercase;">Detectado em</th>
+            </tr>
+          </thead>
+          <tbody id="pdfDashTabelaReg"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Rodapé -->
+    <div class="pdf-footer">
+      <span>Prefeitura Municipal de Cuité – Fila de Regulação Ambulatorial</span>
+      <span id="pdfDashRodape"></span>
+    </div>
+  </div>
+
   <script>
     // =============================================
     // ⚙️ CONFIGURAÇÃO
@@ -2016,6 +2150,10 @@
       setStatus('Atualizado em: ' + new Date().toLocaleString('pt-BR'), false);
       todosRegistros     = dados.map(d => ({...d, diasEspera: Number(d.diasEspera)})).filter(d => !isNaN(d.diasEspera));
       registrosFiltrados = todosRegistros;
+
+      // ── Habilita botão PDF ──
+      const btnPdfD = document.getElementById('btnPdfDash');
+      if (btnPdfD) btnPdfD.disabled = false;
 
       // ── Atualiza memória de regulados ──
       const { novasDeteccoes } = atualizarMemoriaReguladoss(todosRegistros);
@@ -3649,6 +3787,215 @@ Retorne APENAS este JSON (sem blocos de código, sem marcação):
           </div>
           <div class="aut-proc-list" id="${rowId}">${fnDetalhes(itens)}</div>`;
         container.appendChild(div);
+      });
+    }
+
+    // =============================================
+    // EXPORTAR PDF – REGULADOS
+    // =============================================
+    function gerarPdfReguladoss() {
+      let regulados = [];
+      try { regulados = JSON.parse(localStorage.getItem(REMOVIDOS_KEY)||'[]'); } catch(e) {}
+      regulados.sort((a,b) => (b.detectadoEm||'').localeCompare(a.detectadoEm||''));
+
+      if (!regulados.length) { alert('Nenhuma saída detectada para exportar.'); return; }
+
+      const btn   = document.getElementById('btnPdfReguladoss');
+      btn.disabled = true;
+      btn.textContent = 'Gerando…';
+
+      const agora = new Date().toLocaleString('pt-BR');
+
+      // Logo
+      document.getElementById('pdfRegLogoWrap').innerHTML = LOGO_URL
+        ? `<img src="${LOGO_URL}" class="pdf-header-logo" alt="Logo" />`
+        : `<div class="pdf-header-logo-placeholder">🏥</div>`;
+
+      document.getElementById('pdfRegData').textContent    = `Gerado em: ${agora}`;
+      document.getElementById('pdfRegRodape').textContent  = `Documento gerado em ${agora}`;
+      document.getElementById('pdfRegSecHeader').textContent = `${regulados.length} saída(s) detectada(s) nos últimos 30 dias`;
+
+      // Cores de risco para PDF
+      const riscoCoresPdf = { vermelho:'#DC2626', amarelo:'#D97706', verde:'#059669', azul:'#2563EB' };
+
+      document.getElementById('pdfRegBody').innerHTML = regulados.map((r, i) => {
+        const cor      = normalizarCor(r.corRisco);
+        const corHex   = cor ? riscoCoresPdf[cor] : '#9ca3af';
+        const label    = cor ? RISCO[cor].label : (r.corRisco || '—');
+        const dCor     = r.diasEspera > 90 ? '#DC2626' : r.diasEspera > 60 ? '#D97706' : '#059669';
+        const zebra    = i % 2 === 0 ? '#ffffff' : '#f0fafb';
+        return `<tr style="background:${zebra};border-bottom:1px solid #e5e7eb;">
+          <td style="padding:7px 14px;color:#6b7280;font-size:.78rem;">${i+1}</td>
+          <td style="padding:7px 14px;color:#1a3a42;font-weight:500;">${r.paciente||'—'}</td>
+          <td style="padding:7px 14px;color:#374151;max-width:200px;">${truncar(r.procedimento||'—', 45)}</td>
+          <td style="padding:7px 14px;text-align:center;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${corHex};margin-right:4px;vertical-align:middle;"></span>
+            <span style="color:${corHex};font-size:.76rem;font-weight:600;">${truncar(label,22)}</span>
+          </td>
+          <td style="padding:7px 14px;text-align:right;color:${dCor};font-weight:700;">${r.diasEspera??'—'}</td>
+          <td style="padding:7px 14px;text-align:right;color:#374151;">${fmtData(r.dataSolicitacao)||'—'}</td>
+          <td style="padding:7px 14px;text-align:right;">
+            <span style="background:#d1fae5;color:#059669;font-size:.74rem;font-weight:700;padding:2px 8px;border-radius:10px;">✓ ${fmtData(r.detectadoEm)||'—'}</span>
+          </td>
+        </tr>`;
+      }).join('');
+
+      const el = document.getElementById('reguladosParaPdf');
+      el.style.display = 'block';
+
+      html2pdf().set({
+        margin:      [0,0,0,0],
+        filename:    `pacientes-regulados-${new Date().toISOString().split('T')[0]}.pdf`,
+        image:       { type:'jpeg', quality:0.97 },
+        html2canvas: { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false },
+        jsPDF:       { unit:'mm', format:'a4', orientation:'portrait' },
+        pagebreak:   { mode:['css','legacy'] }
+      }).from(el).save().then(() => {
+        el.style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9,15 12,18 15,15"/>
+        </svg> Exportar PDF`;
+      });
+    }
+
+    // =============================================
+    // EXPORTAR PDF – DASHBOARD
+    // =============================================
+    function gerarPdfDashboard() {
+      const base = registrosFiltrados.length ? registrosFiltrados : todosRegistros;
+      if (!base.length) { alert('Carregue os dados primeiro.'); return; }
+
+      const btn  = document.getElementById('btnPdfDash');
+      btn.disabled = true;
+      btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Gerando…`;
+
+      const agora     = new Date().toLocaleString('pt-BR');
+      const ini       = document.getElementById('dashDataInicio').value;
+      const fim       = document.getElementById('dashDataFim').value;
+      const periStr   = ini && fim ? `Período: ${fmtData(ini)} a ${fmtData(fim)}  |  ` : '';
+
+      // ── Logo ──
+      const logoWrap = document.getElementById('pdfDashLogoWrap');
+      logoWrap.innerHTML = LOGO_URL
+        ? `<img src="${LOGO_URL}" class="pdf-header-logo" alt="Logo" />`
+        : `<div class="pdf-header-logo-placeholder">🏥</div>`;
+
+      // ── Cabeçalho ──
+      document.getElementById('pdfDashPeriodo').textContent  = `${periStr}Gerado em: ${agora}`;
+      document.getElementById('pdfDashRodape').textContent   = `Documento gerado em ${agora}`;
+
+      // ── KPIs gerais ──
+      const total = base.length;
+      const med   = media(base.map(r => r.diasEspera)).toFixed(1);
+      const geralKpis = [
+        { label:'Total de Solicitações', valor: total,  unidade:'registros' },
+        { label:'Tempo Médio de Espera', valor: med,    unidade:'dias' },
+      ];
+      // Adiciona anos que existem
+      const anosMap = {};
+      base.forEach(r => {
+        const a = r.dataSolicitacao?.slice(0,4); if (!a) return;
+        if (!anosMap[a]) anosMap[a] = [];
+        anosMap[a].push(r.diasEspera);
+      });
+      ['2024','2025','2026'].forEach(a => {
+        if (anosMap[a]) geralKpis.push({ label:`Solicitações ${a}`, valor: anosMap[a].length, unidade: `${((anosMap[a].length/total)*100).toFixed(1)}% · média ${media(anosMap[a]).toFixed(1)}d` });
+      });
+      document.getElementById('pdfDashKpisGeral').innerHTML = geralKpis.map(k => `
+        <div style="background:#f0fafb;border:1px solid #bcdde1;border-top:3px solid #367886;border-radius:8px;padding:12px 14px;">
+          <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.6px;color:#4a7a86;margin-bottom:6px;font-weight:600;">${k.label}</div>
+          <div style="font-size:1.6rem;font-weight:700;color:#367886;line-height:1;">${k.valor}</div>
+          <div style="font-size:.72rem;color:#639aa5;margin-top:4px;">${k.unidade}</div>
+        </div>`).join('');
+
+      // ── KPIs risco ──
+      const contR = {vermelho:0,amarelo:0,verde:0,azul:0};
+      base.forEach(r => { const c = normalizarCor(r.corRisco); if(c) contR[c]++; });
+      const riscoCores = { vermelho:['#DC2626','#fee2e2'], amarelo:['#D97706','#fef3c7'], verde:['#059669','#d1fae5'], azul:['#2563EB','#dbeafe'] };
+      const riscoLabels = { vermelho:'Prioridade Zero – Emergência', amarelo:'Prioridade 1 – Urgência', verde:'Prioridade 2 – Não urgente', azul:'Prioridade 3 – Eletivo' };
+      document.getElementById('pdfDashKpisRisco').innerHTML = ['vermelho','amarelo','verde','azul'].map(c => {
+        const [cor, bg] = riscoCores[c];
+        const pct = total > 0 ? ((contR[c]/total)*100).toFixed(1) : '0.0';
+        return `<div style="background:${bg};border:1px solid ${cor}33;border-top:3px solid ${cor};border-radius:8px;padding:12px 14px;">
+          <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.6px;color:${cor};margin-bottom:6px;font-weight:600;">${riscoLabels[c]}</div>
+          <div style="font-size:1.6rem;font-weight:700;color:${cor};line-height:1;">${contR[c]}</div>
+          <div style="font-size:.72rem;color:${cor};margin-top:4px;opacity:.8;">pacientes · ${pct}%</div>
+        </div>`;
+      }).join('');
+
+      // ── Gráficos (captura das canvas existentes) ──
+      const graficos = [
+        { id:'chartFaixas',       titulo:'Faixa de Dias em Espera' },
+        { id:'chartRisco',        titulo:'Distribuição por Risco' },
+        { id:'chartQtdProc',      titulo:'Pacientes por Procedimento' },
+        { id:'chartEtarioRisco',  titulo:'Faixa Etária por Risco' },
+      ];
+      document.getElementById('pdfDashGraficos').innerHTML = graficos.map(g => {
+        const canvas = document.getElementById(g.id);
+        if (!canvas) return '';
+        const imgData = canvas.toDataURL('image/png');
+        return `<div style="background:#f9fafb;border:1px solid #bcdde1;border-radius:8px;padding:10px;">
+          <div style="font-size:.72rem;font-weight:700;color:#367886;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">${g.titulo}</div>
+          <img src="${imgData}" style="width:100%;height:auto;display:block;border-radius:4px;" />
+        </div>`;
+      }).join('');
+
+      // ── Top 10 procedimentos ──
+      const procMap = agruparPor(base, r => r.procedimento);
+      const topProc = [...procMap.entries()]
+        .map(([p,rows]) => ({p, q:rows.length, m:media(rows.map(r=>r.diasEspera))}))
+        .sort((a,b) => b.q - a.q).slice(0,10);
+      const tbodyProc = document.getElementById('pdfDashTabelaProc');
+      tbodyProc.innerHTML = topProc.map((row, i) => `
+        <tr style="border-bottom:1px solid #e5e7eb;">
+          <td style="padding:8px 14px;color:#374151;font-weight:600;">${i+1}</td>
+          <td style="padding:8px 14px;color:#374151;">${row.p}</td>
+          <td style="padding:8px 14px;text-align:right;color:#374151;font-weight:600;">${row.q}</td>
+          <td style="padding:8px 14px;text-align:right;color:${row.m>90?'#DC2626':row.m>60?'#D97706':'#059669'};font-weight:700;">${row.m.toFixed(1)}</td>
+        </tr>`).join('');
+
+      // ── Regulados ──
+      let regulados = [];
+      try { regulados = JSON.parse(localStorage.getItem(REMOVIDOS_KEY)||'[]'); } catch(e) {}
+      regulados.sort((a,b) => (b.detectadoEm||'').localeCompare(a.detectadoEm||''));
+      const secReg = document.getElementById('pdfDashRegSection');
+      const tbodyReg = document.getElementById('pdfDashTabelaReg');
+      if (regulados.length === 0) {
+        secReg.style.display = 'none';
+      } else {
+        secReg.style.display = '';
+        tbodyReg.innerHTML = regulados.map(r => `
+          <tr style="border-bottom:1px solid #e5e7eb;">
+            <td style="padding:7px 12px;color:#374151;">${r.paciente||'—'}</td>
+            <td style="padding:7px 12px;color:#374151;max-width:220px;">${truncar(r.procedimento||'—',45)}</td>
+            <td style="padding:7px 12px;text-align:right;color:#374151;font-weight:600;">${r.diasEspera??'—'}</td>
+            <td style="padding:7px 12px;text-align:right;color:#059669;font-weight:600;">${fmtData(r.detectadoEm)||'—'}</td>
+          </tr>`).join('');
+      }
+
+      // ── Exporta ──
+      const el  = document.getElementById('dashParaPdf');
+      el.style.display = 'block';
+
+      const dataLabel = ini && fim ? `${ini}-a-${fim}` : new Date().toISOString().split('T')[0];
+      const opt = {
+        margin:      [0, 0, 0, 0],
+        filename:    `gestao-fila-${dataLabel}.pdf`,
+        image:       { type:'jpeg', quality:0.97 },
+        html2canvas: { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false },
+        jsPDF:       { unit:'mm', format:'a4', orientation:'portrait' },
+        pagebreak:   { mode:['css','legacy'], avoid:'.pdf-section' }
+      };
+
+      html2pdf().set(opt).from(el).save().then(() => {
+        el.style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9,15 12,18 15,15"/>
+        </svg> Exportar PDF`;
       });
     }
 
