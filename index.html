@@ -983,6 +983,83 @@
     }
     .regulados-aviso strong { color: var(--primary); }
 
+    /* ══ Sort controls ══ */
+    .sort-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .76rem;
+    }
+    .sort-bar span { color: var(--text-secondary); font-weight: 500; margin-right: 2px; }
+    .sort-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 12px; border-radius: 6px;
+      border: 1px solid var(--border); background: #fff;
+      color: var(--text-secondary); font-size: .76rem; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+    }
+    .sort-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .sort-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* ══ Detalhe inline do paciente ══ */
+    .fila-detail-row td {
+      padding: 0 !important;
+      background: #f0fafb !important;
+      border-bottom: 2px solid var(--mid2) !important;
+    }
+    .fila-detail-inner {
+      padding: 14px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .fila-stat-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      min-width: 140px;
+      text-align: center;
+    }
+    .fila-stat-box .fval {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .fila-stat-box .fval.warn  { color: var(--risco-vermelho); }
+    .fila-stat-box .fval.ok    { color: var(--risco-verde); }
+    .fila-stat-box .flbl {
+      font-size: .68rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .fila-detail-msg {
+      flex: 1;
+      min-width: 200px;
+      font-size: .82rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      padding: 10px 14px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .fila-detail-msg strong { color: var(--primary); }
+    .fila-detail-msg .alerta { color: var(--risco-vermelho); font-weight: 600; }
+    tr.row-selecionado td { background: rgba(54,120,134,.06) !important; }
+    tbody tr.row-paciente { cursor: pointer; }
+    tbody tr.row-paciente:hover td { background: rgba(54,120,134,.06); }
+
     /* Responsivo mobile */
     @media(max-width:768px){
       .aut-kpi-grid { grid-template-columns: repeat(2,1fr); }
@@ -1305,6 +1382,22 @@
                 <input type="text" id="searchInput" placeholder="Pesquisar…" oninput="renderizarTabela()" />
               </div>
             </div>
+          </div>
+          <!-- Barra de ordenação -->
+          <div class="sort-bar" id="sortBar">
+            <span>Ordenar por:</span>
+            <button class="sort-btn active" id="sortBtnDias"  onclick="setSortTabela('diasEspera')">
+              ⏱ Dias em Espera <span id="sortIconDias">↓</span>
+            </button>
+            <button class="sort-btn" id="sortBtnNome"  onclick="setSortTabela('paciente')">
+              👤 Nome <span id="sortIconNome"></span>
+            </button>
+            <button class="sort-btn" id="sortBtnData"  onclick="setSortTabela('dataSolicitacao')">
+              📅 Data Solicitação <span id="sortIconData"></span>
+            </button>
+            <button class="sort-btn" id="sortBtnProc"  onclick="setSortTabela('procedimento')">
+              🏥 Procedimento <span id="sortIconProc"></span>
+            </button>
           </div>
           <table>
             <thead id="tableHead"></thead>
@@ -1986,10 +2079,12 @@
     const NOME_KEY  = 'fila_nome';
 
     // ── Estado global ──
-    let todosRegistros  = [];
+    let todosRegistros     = [];
     let registrosFiltrados = [];
-    let modoTabela      = 'procedimento';
-    let analiseGerada   = false;
+    let modoTabela         = 'procedimento';
+    let analiseGerada      = false;
+    let sortConfig         = { campo: 'diasEspera', ordem: 'desc' };
+    let pacienteSelecionado = null; // cod da linha expandida
 
     // ── Gráficos ──
     let chartFaixasInst = null, chartRiscoInst = null,
@@ -2477,44 +2572,165 @@
     // TABELA
     // =============================================
     function setModo(modo) {
-      modoTabela=modo;
-      document.getElementById('btnProcedimento').classList.toggle('active',modo==='procedimento');
-      document.getElementById('btnPaciente').classList.toggle('active',modo==='paciente');
-      document.getElementById('searchInput').value='';
+      modoTabela = modo;
+      pacienteSelecionado = null;
+      document.getElementById('btnProcedimento').classList.toggle('active', modo==='procedimento');
+      document.getElementById('btnPaciente').classList.toggle('active', modo==='paciente');
+      document.getElementById('searchInput').value = '';
+      // Mostra/oculta barra de sort (útil em ambos os modos)
+      renderizarTabela();
+    }
+
+    function setSortTabela(campo) {
+      if (sortConfig.campo === campo) {
+        sortConfig.ordem = sortConfig.ordem === 'desc' ? 'asc' : 'desc';
+      } else {
+        sortConfig.campo = campo;
+        sortConfig.ordem = 'desc';
+      }
+      pacienteSelecionado = null;
+      atualizarBotoesSortTabela();
+      renderizarTabela();
+    }
+
+    function atualizarBotoesSortTabela() {
+      const campos = ['diasEspera','paciente','dataSolicitacao','procedimento'];
+      const icons  = { diasEspera:'Dias', paciente:'Nome', dataSolicitacao:'Data', procedimento:'Proc' };
+      campos.forEach(c => {
+        const btn  = document.getElementById('sortBtn' + {diasEspera:'Dias',paciente:'Nome',dataSolicitacao:'Data',procedimento:'Proc'}[c]);
+        const icon = document.getElementById('sortIcon' + {diasEspera:'Dias',paciente:'Nome',dataSolicitacao:'Data',procedimento:'Proc'}[c]);
+        if (!btn) return;
+        const ativo = sortConfig.campo === c;
+        btn.classList.toggle('active', ativo);
+        if (icon) icon.textContent = ativo ? (sortConfig.ordem === 'desc' ? ' ↓' : ' ↑') : '';
+      });
+    }
+
+    function aplicarSort(linhas) {
+      const { campo, ordem } = sortConfig;
+      return [...linhas].sort((a, b) => {
+        let va = a[campo], vb = b[campo];
+        if (campo === 'diasEspera') { va = Number(va)||0; vb = Number(vb)||0; }
+        else { va = String(va||'').toLowerCase(); vb = String(vb||'').toLowerCase(); }
+        if (va < vb) return ordem === 'desc' ? 1 : -1;
+        if (va > vb) return ordem === 'desc' ? -1 : 1;
+        return 0;
+      });
+    }
+
+    function toggleDetalhesPaciente(cod) {
+      pacienteSelecionado = pacienteSelecionado === cod ? null : cod;
       renderizarTabela();
     }
 
     function renderizarTabela() {
-      const termo=(document.getElementById('searchInput').value||'').toLowerCase();
-      const head=document.getElementById('tableHead'), tbody=document.getElementById('tabelaBody');
-      const base = registrosFiltrados.length ? registrosFiltrados : todosRegistros;
+      const termo = (document.getElementById('searchInput').value||'').toLowerCase();
+      const head  = document.getElementById('tableHead');
+      const tbody = document.getElementById('tabelaBody');
+      const base  = registrosFiltrados.length ? registrosFiltrados : todosRegistros;
+      const todos = todosRegistros; // base completa para comparação de fila
 
-      if(modoTabela==='procedimento'){
-        head.innerHTML=`<tr><th>Procedimento</th><th class="td-right">Qtde em Fila</th><th class="td-right">Tempo Médio de Espera (dias)</th></tr>`;
-        let linhas=[...agruparPor(base,r=>r.procedimento).entries()]
-          .map(([p,rows])=>({p,q:rows.length,m:media(rows.map(r=>r.diasEspera))}))
-          .sort((a,b)=>b.m-a.m);
-        if(termo)linhas=linhas.filter(l=>l.p.toLowerCase().includes(termo)||String(l.q).includes(termo)||l.m.toFixed(1).includes(termo));
-        if(!linhas.length){tbody.innerHTML='<tr class="empty-row"><td colspan="3">Nenhum resultado.</td></tr>';return;}
-        tbody.innerHTML='';
-        linhas.forEach(l=>{
-          const cls=l.m>90?'badge-alto':l.m>60?'badge-medio':l.m>30?'badge-normal':'badge-baixo';
-          const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${l.p}</td><td class="td-right">${l.q}</td><td class="td-right ${cls}">${l.m.toFixed(1)}</td>`;
+      if (modoTabela === 'procedimento') {
+        head.innerHTML = `<tr>
+          <th>Procedimento</th>
+          <th class="td-right" style="cursor:pointer" onclick="setSortTabela('diasEspera')">Qtde em Fila</th>
+          <th class="td-right" style="cursor:pointer" onclick="setSortTabela('diasEspera')">Tempo Médio (dias) ${sortConfig.campo==='diasEspera'?(sortConfig.ordem==='desc'?'↓':'↑'):''}</th>
+        </tr>`;
+        let linhas = [...agruparPor(base, r => r.procedimento).entries()]
+          .map(([p, rows]) => ({ p, q: rows.length, m: media(rows.map(r => r.diasEspera)) }))
+          .sort((a, b) => b.m - a.m);
+        if (termo) linhas = linhas.filter(l => l.p.toLowerCase().includes(termo));
+        if (!linhas.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="3">Nenhum resultado.</td></tr>'; return; }
+        tbody.innerHTML = '';
+        linhas.forEach(l => {
+          const cls = l.m>90?'badge-alto':l.m>60?'badge-medio':l.m>30?'badge-normal':'badge-baixo';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${l.p}</td><td class="td-right">${l.q}</td><td class="td-right ${cls}">${l.m.toFixed(1)}</td>`;
           tbody.appendChild(tr);
         });
+
       } else {
-        head.innerHTML=`<tr><th>Paciente</th><th>Procedimento</th><th>Risco</th><th class="td-right">Idade</th><th class="td-right">Dias em Espera</th></tr>`;
-        let linhas=[...base].sort((a,b)=>a.paciente.localeCompare(b.paciente));
-        if(termo)linhas=linhas.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(termo)));
-        if(!linhas.length){tbody.innerHTML='<tr class="empty-row"><td colspan="5">Nenhum resultado.</td></tr>';return;}
-        tbody.innerHTML='';
-        linhas.forEach(r=>{
-          const cor=normalizarCor(r.corRisco),dot=cor?`dot-${cor}`:'dot-outro',label=cor?RISCO[cor].label:(r.risco||'—');
-          const dCls=r.diasEspera>90?'badge-alto':r.diasEspera>60?'badge-medio':r.diasEspera>30?'badge-normal':'badge-baixo';
-          const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${r.paciente||'—'}</td><td>${truncar(r.procedimento,45)}</td><td><span class="dot ${dot}"></span>${label}</td><td class="td-right">${r.idadePaciente||'—'}</td><td class="td-right ${dCls}">${r.diasEspera}</td>`;
+        // ── Modo paciente ──
+        head.innerHTML = `<tr>
+          <th>Paciente</th>
+          <th>Procedimento</th>
+          <th>Risco</th>
+          <th class="td-right">Idade</th>
+          <th class="td-right" style="cursor:pointer;user-select:none" onclick="setSortTabela('diasEspera')">
+            Dias em Espera ${sortConfig.campo==='diasEspera'?(sortConfig.ordem==='desc'?'↓':'↑'):'↕'}
+          </th>
+        </tr>`;
+
+        let linhas = aplicarSort(base);
+        if (termo) linhas = linhas.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(termo)));
+        if (!linhas.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Nenhum resultado.</td></tr>'; return; }
+
+        tbody.innerHTML = '';
+        linhas.forEach(r => {
+          const cor   = normalizarCor(r.corRisco);
+          const dot   = cor ? `dot-${cor}` : 'dot-outro';
+          const label = cor ? RISCO[cor].label : (r.risco||'—');
+          const dCls  = r.diasEspera>90?'badge-alto':r.diasEspera>60?'badge-medio':r.diasEspera>30?'badge-normal':'badge-baixo';
+          const sel   = pacienteSelecionado === r.codSolicitacao;
+
+          const tr = document.createElement('tr');
+          tr.className = 'row-paciente' + (sel ? ' row-selecionado' : '');
+          tr.innerHTML = `
+            <td>
+              <span style="display:inline-flex;align-items:center;gap:6px;">
+                <span style="font-size:.75rem;color:var(--primary);transition:transform .2s;display:inline-block;transform:${sel?'rotate(90deg)':'rotate(0)'}"">▶</span>
+                <strong style="color:var(--primary);text-decoration:underline dotted;cursor:pointer">${r.paciente||'—'}</strong>
+              </span>
+            </td>
+            <td>${truncar(r.procedimento,45)}</td>
+            <td><span class="dot ${dot}"></span>${label}</td>
+            <td class="td-right">${r.idadePaciente||'—'}</td>
+            <td class="td-right ${dCls}">${r.diasEspera}</td>`;
+          tr.onclick = () => toggleDetalhesPaciente(r.codSolicitacao);
           tbody.appendChild(tr);
+
+          // ── Linha de detalhes expandida ──
+          if (sel) {
+            // Todos com mesmo procedimento na base completa
+            const mesmaProc  = todos.filter(x => x.procedimento === r.procedimento);
+            const maisAntigo = mesmaProc.filter(x => x.diasEspera > r.diasEspera);
+            const maisNovo   = mesmaProc.filter(x => x.diasEspera < r.diasEspera);
+            const posicao    = maisAntigo.length + 1;
+            const total      = mesmaProc.length;
+            const pctFila    = total > 0 ? ((posicao / total) * 100).toFixed(0) : 0;
+            const alertaMensagem = maisAntigo.length > 0
+              ? `<span class="alerta">⚠️ ${maisAntigo.length} paciente(s) aguardam há mais tempo por este procedimento e ainda não foram atendidos.</span>`
+              : `<span style="color:var(--risco-verde);font-weight:600">✅ Este é o paciente com maior tempo de espera para este procedimento.</span>`;
+
+            const trDet = document.createElement('tr');
+            trDet.className = 'fila-detail-row';
+            trDet.innerHTML = `<td colspan="5">
+              <div class="fila-detail-inner">
+                <div class="fila-stat-box">
+                  <div class="fval ${posicao===1?'ok':posicao<=3?'':'warn'}">${posicao}º</div>
+                  <div class="flbl">Posição na fila</div>
+                </div>
+                <div class="fila-stat-box">
+                  <div class="fval">${total}</div>
+                  <div class="flbl">Total na fila p/ proc.</div>
+                </div>
+                <div class="fila-stat-box">
+                  <div class="fval warn">${maisAntigo.length}</div>
+                  <div class="flbl">Aguardam mais tempo</div>
+                </div>
+                <div class="fila-stat-box">
+                  <div class="fval ok">${maisNovo.length}</div>
+                  <div class="flbl">Aguardam menos tempo</div>
+                </div>
+                <div class="fila-detail-msg">
+                  <strong>🏥 ${r.procedimento}</strong><br>
+                  <strong>${r.paciente}</strong> está na posição <strong>${posicao}ª de ${total}</strong> na fila para este procedimento (top ${pctFila}%).<br>
+                  ${alertaMensagem}
+                </div>
+              </div>
+            </td>`;
+            tbody.appendChild(trDet);
+          }
         });
       }
     }
